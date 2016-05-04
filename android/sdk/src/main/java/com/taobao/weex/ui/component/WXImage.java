@@ -204,13 +204,17 @@
  */
 package com.taobao.weex.ui.component;
 
+import android.graphics.Point;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 
+import com.taobao.weex.IWXImageLoaderListener;
 import com.taobao.weex.WXEnvironment;
 import com.taobao.weex.WXSDKInstance;
+import com.taobao.weex.WXSDKManager;
 import com.taobao.weex.adapter.IWXImgLoaderAdapter;
 import com.taobao.weex.common.WXDomPropConstant;
 import com.taobao.weex.common.WXImageSharpen;
@@ -222,10 +226,15 @@ import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.WXResourceUtils;
 import com.taobao.weex.utils.WXViewUtils;
 
+import static com.taobao.weex.dom.flex.CSSLayout.DIMENSION_WIDTH;
+
 /**
  * Image component
  */
-public class WXImage extends WXComponent implements IWXRecyclerViewChild {
+public class
+WXImage extends WXComponent implements IWXRecyclerViewChild, IWXImageLoaderListener {
+
+  private Point m_lastImageSize = new Point(-1, -1);
 
   public WXImage(WXSDKInstance instance, WXDomObject node,
                  WXVContainer parent, String instanceId, boolean lazy) {
@@ -261,6 +270,35 @@ public class WXImage extends WXComponent implements IWXRecyclerViewChild {
         }
       }
     }
+  }
+
+  private void notifyImageSizeChanged(final Point size) {
+    // here we check dimension to avoid send used sizeData in dom thread if img has attr width. maybe we will delete it later
+    if (!Float.isNaN(mDomObj.cssstyle.dimensions[DIMENSION_WIDTH]) && mDomObj.cssstyle.dimensions[DIMENSION_WIDTH] > 0)
+      return;
+    if (size == null || m_lastImageSize.equals(size))
+      return;
+    WXSDKManager.getInstance().getWXRenderManager().onImageSizeChanged(size, mInstanceId, mDomObj.ref);
+    m_lastImageSize = size;
+  }
+
+  @Override
+  public void onImageSizeLoaded(final Point size) {
+    if (Looper.myLooper() == Looper.getMainLooper()) {
+      notifyImageSizeChanged(size);
+    } else {
+      WXSDKManager.getInstance().postOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          notifyImageSizeChanged(size);
+        }
+      }, 0);
+    }
+  }
+
+  @Override
+  public void onImageLoadFailed() {
+
   }
 
   @Override
@@ -308,7 +346,7 @@ public class WXImage extends WXComponent implements IWXRecyclerViewChild {
     IWXImgLoaderAdapter imgLoaderAdapter = mInstance.getImgLoaderAdapter();
     if (imgLoaderAdapter != null) {
       imgLoaderAdapter.setImage(src, imageView,
-                                mDomObj.attr.getImageQuality(), imageStrategy);
+                                mDomObj.attr.getImageQuality(), imageStrategy, this);
     }
   }
 

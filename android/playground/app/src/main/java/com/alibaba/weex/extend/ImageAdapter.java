@@ -1,9 +1,14 @@
 package com.alibaba.weex.extend;
 
+import android.graphics.Bitmap;
+import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.RequestCreator;
+import com.taobao.weex.IWXImageLoaderListener;
 import com.taobao.weex.WXEnvironment;
 import com.taobao.weex.WXSDKManager;
 import com.taobao.weex.adapter.IWXImgLoaderAdapter;
@@ -17,7 +22,7 @@ public class ImageAdapter implements IWXImgLoaderAdapter {
 
   @Override
   public void setImage(final String url, final ImageView view,
-                       WXImageQuality quality, WXImageStrategy strategy) {
+                       WXImageQuality quality, WXImageStrategy strategy, final IWXImageLoaderListener listener) {
     //        if (TextUtils.isEmpty(url)) {
     //            view.setImageBitmap(null);
     //            return;
@@ -93,6 +98,10 @@ public class ImageAdapter implements IWXImgLoaderAdapter {
           temp = "http:" + url;
         }
         if (view.getLayoutParams().width <= 0 || view.getLayoutParams().height <= 0) {
+          // later, in the path, just decode width and height.
+          Picasso.with(WXEnvironment.getApplication())
+                  .load(temp)
+                  .into(new WXimageTarget(view, listener));
           return;
         }
         Picasso.with(WXEnvironment.getApplication())
@@ -101,5 +110,28 @@ public class ImageAdapter implements IWXImgLoaderAdapter {
                     view.getLayoutParams().height).into(view);
       }
     },0);
+  }
+
+  private class WXimageTarget implements  com.squareup.picasso.Target {
+    ImageView mView;
+    IWXImageLoaderListener m_listener;
+
+    WXimageTarget(ImageView view, IWXImageLoaderListener listener) {
+      mView = view;
+      m_listener = listener;
+    }
+
+    @Override
+    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
+      if (m_listener !=null)
+        m_listener.onImageSizeLoaded(new Point(bitmap.getWidth(), bitmap.getHeight()));
+    };
+
+    @Override
+    public void onBitmapFailed(Drawable errorDrawable) { };
+
+    @Override
+    public void onPrepareLoad(Drawable placeHolderDrawable) { };
+
   }
 }

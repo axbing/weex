@@ -204,6 +204,7 @@
  */
 package com.taobao.weex.dom;
 
+import android.graphics.Point;
 import android.os.Handler;
 import android.os.Message;
 
@@ -515,5 +516,19 @@ public final class WXDomManager {
       return;
     }
     statement.refreshFinish();
+  }
+
+  public void onImageSizeChanged(final Point size, final String instanceId, final String ref) {
+    mDomHandler.post(new Runnable() {
+
+      @Override
+      public void run() {
+        WXDomStatement statement = mDomRegistries.get(instanceId);
+        if (statement == null) {
+          return;
+        }
+        statement.onImageSizeChanged(size, ref);
+      }
+    });
   }
 }
