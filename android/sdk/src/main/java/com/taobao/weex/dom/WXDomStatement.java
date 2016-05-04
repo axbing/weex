@@ -204,6 +204,7 @@
  */
 package com.taobao.weex.dom;
 
+import android.graphics.Point;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.taobao.weex.WXEnvironment;
@@ -216,6 +217,7 @@ import com.taobao.weex.dom.flex.CSSNode;
 import com.taobao.weex.dom.flex.Spacing;
 import com.taobao.weex.ui.IWXRenderTask;
 import com.taobao.weex.ui.WXRenderManager;
+import com.taobao.weex.ui.component.WXBasicComponentType;
 import com.taobao.weex.ui.component.WXComponent;
 import com.taobao.weex.ui.component.WXVContainer;
 import com.taobao.weex.utils.WXConst;
@@ -231,6 +233,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.taobao.weex.dom.flex.CSSLayout.DIMENSION_WIDTH;
 
 /**
  * <p>
@@ -976,6 +980,8 @@ class WXDomStatement {
     //        }
 
     domObject.type = type;
+    if (type.contains(WXBasicComponentType.IMAGE) || type.contains(WXBasicComponentType.IMG))
+      domObject.setIsImage();
     domObject.ref = (String) map.get("ref");
     Object style = map.get("style");
     if (style != null && style instanceof JSONObject) {
@@ -1050,5 +1056,14 @@ class WXDomStatement {
   static class AddDomInfo {
 
     public WXComponent component;
+  }
+
+  public void onImageSizeChanged(Point size, String ref) {
+    WXDomObject dom =  mRegistry.get(ref);
+    if (dom == null || dom.getIntrinsicSize().equals(size))
+      return;
+    mDirty = true;
+    dom.imageChanged(size);
+    batch();
   }
 }

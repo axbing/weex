@@ -204,6 +204,7 @@
  */
 package com.taobao.weex.dom;
 
+import android.graphics.Point;
 import android.text.TextUtils;
 
 import com.taobao.weex.WXEnvironment;
@@ -523,4 +524,10 @@ public class WXDomObject extends CSSNode implements Cloneable {
     }
     fixedStyleRefs.add(ref);
   }
+
+  public void imageChanged (Point size) {
+    super.setIntrinsicSize(size);
+    super.dirty();
+  }
+
 }

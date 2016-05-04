@@ -205,6 +205,7 @@
 package com.taobao.weex.ui;
 
 import android.animation.Animator;
+import android.graphics.Point;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Interpolator;
@@ -214,6 +215,7 @@ import android.widget.ScrollView;
 import com.alibaba.fastjson.JSONObject;
 import com.taobao.weex.WXEnvironment;
 import com.taobao.weex.WXSDKInstance;
+import com.taobao.weex.WXSDKManager;
 import com.taobao.weex.common.WXRenderStrategy;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.dom.flex.Spacing;
@@ -597,6 +599,10 @@ class WXRenderStatement {
         WXLogUtils.e(WXLogUtils.getStackTrace(e));
       }
     }
+  }
+
+  public void onImageSizeChanged(Point size, String ref) {
+    WXSDKManager.getInstance().getWXDomManager().onImageSizeChanged(size, mInstanceId, ref);
   }
 
 }
