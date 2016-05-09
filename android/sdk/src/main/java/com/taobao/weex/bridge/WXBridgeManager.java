@@ -271,6 +271,7 @@ public class WXBridgeManager implements Callback {
   public static final String METHOD_FIRE_EVENT = "fireEvent";
   public static final String METHOD_CALLBACK = "callback";
   public static final String METHOD_REFRESH_INSTANCE = "refreshInstance";
+  public static final String METHOD_SUBMIT_TASKS = "submitTasks";
   private static final String UNDEFINED = "-1";
   private static WXBridgeManager mBridgeManager;
   /**
@@ -414,6 +415,11 @@ public class WXBridgeManager implements Callback {
       return;
     }
 
+    if (tasks.equals("frameUpdated")) {
+        doFrameUpdated(instanceId);
+        return;
+    }
+
     if (WXEnvironment.isApkDebugable()) {
       mLodBuilder.append("[WXBridgeManager] callNative >>>> instanceId:").append(instanceId)
           .append(", tasks:").append(tasks).append(", callback:").append(callback);
@@ -436,6 +442,8 @@ public class WXBridgeManager implements Callback {
         WXLogUtils.e("[WXBridgeManager] callNative exception: " + WXLogUtils.getStackTrace(e));
       }
     }
+
+    doCheckCommandQueue(instanceId);
 
     if (UNDEFINED.equals(callback)
         || mDestroyedInstanceId.equals(instanceId)) {
@@ -621,6 +629,15 @@ public class WXBridgeManager implements Callback {
     }
     instance.commitUTStab(WXConst.JS_BRIDGE, errCode);
   }
+
+  public void submitTasks(String instanceId) {
+      if (TextUtils.isEmpty(instanceId))
+          return;
+
+      addUITask(METHOD_SUBMIT_TASKS, instanceId);
+      sendMessage(instanceId, WXJSBridgeMsgType.CALL_JS_BATCH);
+  }
+
 
   /**
    * Create instance.
@@ -1015,4 +1032,17 @@ public class WXBridgeManager implements Callback {
     public String instanceId;
   }
 
+  private void doFrameUpdated(String instanceId) {
+      WXSDKManager.getInstance().getVSyncScheduler().frameUpdated(instanceId);
+  }
+
+  private static void doCheckCommandQueue(String instanceId) {
+    if (!WXModuleManager.isCommandQueuesEmpty()) {
+        WXSDKManager.getInstance().getVSyncScheduler().domCommandQueueUpdated(instanceId);
+    }
+  }
+
+  public void submitDOMCommandQueue() {
+      WXModuleManager.submitCommandQueues();
+  }
 }

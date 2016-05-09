@@ -27,13 +27,13 @@ export function destroyDocument(id) {
 Document.prototype.open = function () {
   this.closed = false
   if (this.listener) {
-    this.listener.batched = false
+      this.listener.batched = false;
   }
 }
 Document.prototype.close = function () {
   this.closed = true
   if (this.listener) {
-    this.listener.batched = true
+    this.listener.batched = true;
   }
 }
 
@@ -43,7 +43,7 @@ Document.prototype.setEventManager = function (eventManager) {
 
 Document.prototype.setListener = function (listener) {
   this.listener = listener
-  listener.batched = !!this.closed
+  listener.batched = !!this.closed;
 }
 
 Document.prototype.addRef = function (el) {

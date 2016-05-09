@@ -202,249 +202,136 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.taobao.weex.bridge;
+package com.taobao.weex.ui;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.taobao.weex.WXEnvironment;
-import com.taobao.weex.WXSDKManager;
-import com.taobao.weex.common.IWXObject;
-import com.taobao.weex.common.WXException;
-import com.taobao.weex.common.WXModule;
-import com.taobao.weex.common.WXModuleAnno;
-import com.taobao.weex.common.ICommandQueue;
-import com.taobao.weex.dom.WXDomModule;
-import com.taobao.weex.utils.WXLogUtils;
+public class WXVSyncStateMachine {
+    // the vsync acquired state
+    // will change into 1. VSYNC_SUBMITTING(batch mode)
+    // 2. VSYNC_DOM_COMMAND_QUEUED_UPDATED (not batch mode).
+    private static final int VSYNC_ACQUIRED = 0;
+    // this state indicates the js tasks have been
+    // submitted to layout. Can change into VSYNC_DOM_COMMAND_QUEUED_UPDATED.
+    private static final int VSYNC_SUBMITTING = 1;
+    // this state indicates the ui tasks are going to take place.
+    // Can change into VSYNC_ACQUIRED.
+    private static final int VSYNC_DISPLAYING = 2;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
+    // this state indicates layout task has been finished.
+    // Can change into VSYNC_DISPLAYING
+    // (good frame), or VSYNC_ACQUIRED (lost one frame, layout take
+    // too much time).
+    private static final int VSYNC_LAYOUTED = 3;
+    // indicates dom command queue has been updated.
+    // can change into VSYNC_LAYOUTED.
+    private static final int VSYNC_DOM_COMMAND_QUEUED_UPDATED = 4;
 
-/**
- * Manager class for weex module. There are two types of modules in weex, one is instance-level module,
- * the other is global-level module. Instance-level module will be created every time an instance
- * is created, while global-level module will be singleton in {@link com.taobao.weex.WXSDKEngine}.
- */
-public class WXModuleManager {
-
-  /**
-   * module class object dictionary
-   */
-  private static Map<String, Class<? extends WXModule>> sModuleClazzMap = new HashMap<>();
-  private static Map<String, WXModule> sGlobalModuleMap = new HashMap<>();
-  private static Map<WXModule, HashMap<String, Method>> sGlobalModuleMethodMap = new HashMap<>();
-  private static ArrayList<ICommandQueue> sCommandQueues = new ArrayList<>();
-
-  /**
-   * module object dictionary
-   * K : instanceId, V : Modules
-   */
-  private static Map<String, HashMap<String, WXModule>> sInstanceModuleMap = new HashMap<>();
-
-  /**
-   * module object method dictionary
-   * K : module object, V : Method list
-   */
-  private static Map<WXModule, HashMap<String, Method>> sInstanceModuleMethodMap = new HashMap<>();
-
-  public static boolean registerModule(String moduleName, Class<? extends WXModule> moduleClass) throws WXException {
-    return registerModule(moduleName, moduleClass, false);
-  }
-
-  private static void addIfCommandQueue(Object o) {
-      if (o instanceof ICommandQueue) {
-          sCommandQueues.add((ICommandQueue)o);
-      }
-  }
-
-
-  /**
-   * Register module to JavaScript and Android
-   */
-  public static boolean registerModule(String moduleName, Class<? extends WXModule> moduleClass, boolean global) throws WXException {
-    if (moduleName == null || moduleClass == null) {
-      return false;
+    public static interface VSyncCallback {
+        void frameUpdated();
+        void frameDisplaying(boolean intime);
+        void vsyncAcquired(boolean intime);
+        void layouted(boolean intime);
+        void domCommandQueueUpdated(boolean intime, boolean requestVsync);
     }
 
-    if (sModuleClazzMap.containsKey(moduleName)) {
-      if (WXEnvironment.isApkDebugable()) {
-        throw new WXException("Duplicate the Module name:" + moduleName);
-      } else {
-        WXLogUtils.e("WXComponentRegistry Duplicate the Module name: " + moduleName);
+    private AtomicInteger state = new AtomicInteger(VSYNC_ACQUIRED);
+    private AtomicBoolean vsyncPending = new AtomicBoolean(false);
+    private volatile boolean frameDirty = false;
+    private volatile boolean domCommandQueueDirty = false;
+
+    private VSyncCallback callback;
+
+    public WXVSyncStateMachine(VSyncCallback callback) {
+        this.callback = callback;
+    }
+
+    public void frameUpdated() {
+        if (state.compareAndSet(VSYNC_ACQUIRED, VSYNC_SUBMITTING)) {
+            callback.frameUpdated();
+        } else {
+            frameDirty = true;
+        }
+    }
+
+    public void frameDisplaying() {
+        boolean intime = true;
+        if (vsyncPending.get()) {
+            intime = false;
+        }
+        if (state.compareAndSet(VSYNC_LAYOUTED, VSYNC_DISPLAYING)) {
+            callback.frameDisplaying(intime);
+        } else {
+            throw new IllegalStateException("frameDisplaying state invalid");
+        }
+    }
+
+    public void vsyncAcquired() {
+        if (state.compareAndSet(VSYNC_DISPLAYING, VSYNC_ACQUIRED)) {
+            callback.vsyncAcquired(true);
+        } else {
+            vsyncPending.set(true);
+            callback.vsyncAcquired(false);
+        }
+    }
+
+    public void layouted() {
+        if (state.compareAndSet(VSYNC_DOM_COMMAND_QUEUED_UPDATED, VSYNC_LAYOUTED)) {
+            boolean intime = true;
+            if (vsyncPending.get()) {
+                intime = false;
+            }
+            callback.layouted(intime);
+        } else {
+            throw new IllegalStateException("frameDisplaying state invalid, state: " + state.get());
+        }
+    }
+
+    public void domCommandQueueUpdated() {
+        if (state.compareAndSet(VSYNC_SUBMITTING, VSYNC_DOM_COMMAND_QUEUED_UPDATED)) {
+            boolean intime = true;
+            if (vsyncPending.get()) {
+                intime = false;
+            }
+            callback.domCommandQueueUpdated(intime, false);
+        } else if (state.compareAndSet(VSYNC_ACQUIRED, VSYNC_DOM_COMMAND_QUEUED_UPDATED)) {
+            callback.domCommandQueueUpdated(true, true);
+        } else {
+            domCommandQueueDirty = true;
+        }
+    }
+
+    public boolean submitPendingVSync() {
+        if (vsyncPending.get()) {
+            vsyncPending.set(false);
+            state.set(VSYNC_ACQUIRED);
+            return true;
+        }
         return false;
-      }
     }
 
-    if (WXEnvironment.isApkDebugable()) {
-      try {
-        moduleClass.getConstructor();
-      } catch (NoSuchMethodException e) {
-        throw new WXException("Module must have a default constructor");
-      }
+    public void validateFrame() {
+        frameDirty = false;
+        domCommandQueueDirty = false;
     }
 
-    if (global) {
-      try {
-        WXModule wxModule = moduleClass.getConstructor().newInstance();
-        sGlobalModuleMap.put(moduleName, wxModule);
-        HashMap<String, Method> methodsMap = getModuleMethods2Map(moduleClass);
-        sGlobalModuleMethodMap.put(wxModule, methodsMap);
-        addIfCommandQueue(wxModule);
-      } catch (Exception e) {
-        WXLogUtils.e(moduleClass + " class must have a default constructor without params. " + WXLogUtils.getStackTrace(e));
-        return false;
-      }
+    public void validateCommandQueue() {
+        domCommandQueueDirty = false;
     }
 
-    return registerNativeModule(moduleName, moduleClass) && registerJSModule(moduleName, moduleClass);
-  }
-
-  private static <T extends WXModule> HashMap<String, Method> getModuleMethods2Map(Class<T> moduleClass) {
-    HashMap<String, Method> moduleMethods = new HashMap<>();
-    try {
-      for (Method method : moduleClass.getMethods()) {
-        // iterates all the annotations available in the method
-        for (Annotation anno : method.getDeclaredAnnotations()) {
-          if (anno != null && anno instanceof WXModuleAnno && ((WXModuleAnno) anno).moduleMethod()) {
-            moduleMethods.put(method.getName(), method);
-          }
-        }
-      }
-    } catch (Throwable e) {
-      WXLogUtils.e("[WXModuleManager] getModuleMethods2Map:" + e.getCause());
-    }
-    return moduleMethods;
-  }
-
-  static <T extends WXModule> boolean registerNativeModule(String moduleName, Class<T> moduleClass) throws WXException {
-    if (moduleClass == null) {
-      return false;
+    public boolean isFrameDirty() {
+        return frameDirty;
     }
 
-    sModuleClazzMap.put(moduleName, moduleClass);
-    return true;
-  }
-
-  static <T extends WXModule> boolean registerJSModule(String moduleName, Class<T> moduleClass) {
-    Map<String, Object> modules = new HashMap<String, Object>();
-    modules.put(moduleName, getModuleMethods2Array(moduleClass));
-    WXSDKManager.getInstance().registerModules(modules);
-    return true;
-  }
-
-  private static <T extends WXModule> ArrayList<String> getModuleMethods2Array(Class<T> moduleClass) {
-    ArrayList<String> methods = new ArrayList<>();
-    try {
-      for (Method method : moduleClass.getMethods()) {
-        // iterates all the annotations available in the method
-        for (Annotation anno : method.getDeclaredAnnotations()) {
-          if (anno != null && anno instanceof WXModuleAnno && ((WXModuleAnno) anno).moduleMethod()) {
-            methods.add(method.getName());
-          }
-        }
-      }
-    } catch (Throwable e) {
-      WXLogUtils.e("[WXModuleManager] getModuleMethods2Array:" + e.getStackTrace());
-    }
-    return methods;
-  }
-
-  static boolean callModuleMethod(String instanceId, String moduleStr, String methodStr, JSONArray args) {
-    final WXModule wxModule = findModule(instanceId, moduleStr, methodStr);
-    if (wxModule == null) {
-      return false;
-    }
-    wxModule.mWXSDKInstance = WXSDKManager.getInstance().getSDKInstance(instanceId);
-
-    HashMap<String, Method> methodsMap = sGlobalModuleMethodMap.get(wxModule);
-    methodsMap = methodsMap == null ? sInstanceModuleMethodMap.get(wxModule) : methodsMap;
-    if (methodsMap == null) {
-      WXLogUtils.e("[WXModuleManager] callModuleMethod methodsMap is null.");
-      return false;
-    }
-    final Method moduleMethod = methodsMap.get(methodStr);
-    try {
-      WXCallIC.invoke(wxModule, moduleMethod, args);
-    } catch (Exception e) {
-      WXLogUtils.e("callModuleMethod >>> invoke module:" + moduleStr + ", method:" + methodStr + " failed. " + WXLogUtils.getStackTrace(e));
-      return false;
-    } finally {
-      if (wxModule instanceof WXDomModule) {
-        wxModule.mWXSDKInstance = null;
-      }
-    }
-    return true;
-  }
-
-  static void submitCommandQueues() {
-    for (ICommandQueue queue : sCommandQueues) {
-      queue.submit();
-    }
-  }
-
-  static boolean isCommandQueuesEmpty() {
-    for (ICommandQueue queue : sCommandQueues) {
-        if (!queue.isEmpty()) {
-            return false;
-        }
-    }
-    return true;
-  }
-
-  private static WXModule findModule(String instanceId, String moduleStr, String methodStr) {
-    // find WXModule
-    WXModule wxModule = sGlobalModuleMap.get(moduleStr);
-    Class<? extends WXModule> moduleClass = sModuleClazzMap.get(moduleStr);
-    if (wxModule == null) {
-      HashMap<String, WXModule> moduleMap = sInstanceModuleMap.get(instanceId);
-      if (moduleMap == null) {
-        moduleMap = new HashMap<>();
-        sInstanceModuleMap.put(instanceId, moduleMap);
-      }
-      // if cannot find the Module, create a new Module and save it
-      wxModule = moduleMap.get(moduleStr);
-      if (wxModule == null) {
-        try {
-          wxModule = moduleClass.getConstructor().newInstance();
-        } catch (Exception e) {
-          WXLogUtils.e(moduleClass + " class must have a default constructor without params. " + WXLogUtils.getStackTrace(e));
-          return null;
-        }
-        moduleMap.put(moduleStr, wxModule);
-        addIfCommandQueue(wxModule);
-        // set instance
-        wxModule.mWXSDKInstance = WXSDKManager.getInstance().getSDKInstance(instanceId);
-      }
+    public boolean isDOMCommandQueueDirty() {
+        return domCommandQueueDirty;
     }
 
-    // find module method
-    HashMap<String, Method> methodsMap = sGlobalModuleMethodMap.get(wxModule);
-    methodsMap = methodsMap == null ? sInstanceModuleMethodMap.get(wxModule) : methodsMap;
-    if (methodsMap == null) {
-      methodsMap = getModuleMethods2Map(moduleClass);
-      sInstanceModuleMethodMap.put(wxModule, methodsMap);
+    int getState() {
+        return state.get();
     }
-    return wxModule;
-  }
 
-  public static void destroyInstanceModules(String instanceId) {
-    HashMap<String, WXModule> moduleMap = sInstanceModuleMap.remove(instanceId);
-    if (moduleMap == null || moduleMap.size() < 1) {
-      return;
+    boolean getPending() {
+        return vsyncPending.get();
     }
-    Iterator<Entry<String, WXModule>> iterator = moduleMap.entrySet().iterator();
-    Entry<String, WXModule> entry;
-    while (iterator.hasNext()) {
-      entry = iterator.next();
-      sInstanceModuleMethodMap.remove(entry.getValue());
-    }
-  }
-
 }
