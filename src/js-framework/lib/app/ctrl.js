@@ -73,6 +73,9 @@ export function destroy() {
   this.options = null
   this.blocks = null
   this.vm = null
+  if (this.doc) {
+      this.doc.destory()
+  }
   this.doc = null
   this.customComponentMap = null
   this.callbacks = null

@@ -20,7 +20,7 @@ export function Document(id) {
   this.createDocumentElement()
 }
 
-export function destroyDocument(id) {
+function destroyDocument(id) {
   delete instanceMap[id]
 }
 
@@ -88,6 +88,10 @@ Document.prototype.createElement = function (tagName, props) {
 
 Document.prototype.createComment = function (text) {
   return new Comment(text, this)
+}
+
+Document.prototype.destroy = function () {
+    destroyDocument(this.id)
 }
 
 export function Node() {
