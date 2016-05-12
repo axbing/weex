@@ -416,6 +416,15 @@ class WXDomStatement {
     }
   }
 
+  void reCalculatecssStyle() {
+    WXDomObject rootDom = mRegistry.get(WXDomObject.ROOT);
+    if (rootDom == null) {
+      return;
+    }
+    transformStyle(rootDom, false);
+    mDirty = true;
+  }
+
   /**
    * Walk through the dom tree and create command object of re-calculating
    * {@link android.view.ViewGroup.LayoutParams} for dom that is old.
