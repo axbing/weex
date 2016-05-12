@@ -347,6 +347,27 @@ public final class WXDomManager {
   }
 
   /**
+   * force relayout the whole dom tree and refresh view.
+   *
+   * @param instanceId {@link com.taobao.weex.WXSDKInstance#mInstanceId} for the instance
+   */
+  public void forceRelayout(final String instanceId) {
+    mDomHandler.post(new Runnable() {
+
+      @Override
+      public void run() {
+        WXDomStatement statement = mDomRegistries.get(instanceId);
+        if (statement == null) {
+          return;
+        }
+        statement.reCalculatecssStyle();
+        if (statement.isDirty())
+          sheduleForceLayout(instanceId);
+      }
+    });
+  }
+
+  /**
    * Invoke {@link WXDomStatement} for adding a dom node to its parent in a specific location.
    *
    * @param instanceId {@link com.taobao.weex.WXSDKInstance#mInstanceId} for the instance

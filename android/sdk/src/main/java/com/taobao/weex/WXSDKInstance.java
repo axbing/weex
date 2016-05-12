@@ -380,7 +380,7 @@ public class WXSDKInstance implements IWXActivityStateListener {
    * @param flag     RenderStrategy {@link WXRenderStrategy}
    */
   public void render(String pageName, String template, Map<String, Object> options, String jsonInitData, int width, int height, WXRenderStrategy flag) {
-    if (mRendered || TextUtils.isEmpty(template)) {
+    if ((mRendered || TextUtils.isEmpty(template)) && (mGodViewWidth == width)) {
       return;
     }
     mWXPerformance.pageName = pageName;
@@ -390,8 +390,12 @@ public class WXSDKInstance implements IWXActivityStateListener {
     mRenderStrategy = flag;
     mGodViewWidth = width;
     mGodViewHeight = height;
-    mInstanceId = WXSDKManager.getInstance().generateInstanceId();
-    WXSDKManager.getInstance().createInstance(this, template, options, jsonInitData);
+    if (TextUtils.isEmpty(mInstanceId)) {
+      mInstanceId = WXSDKManager.getInstance().generateInstanceId();
+      WXSDKManager.getInstance().createInstance(this, template, options, jsonInitData);
+    } else {
+      WXSDKManager.getInstance().forceRelayout(mInstanceId);
+    }
     mRendered = true;
   }
 

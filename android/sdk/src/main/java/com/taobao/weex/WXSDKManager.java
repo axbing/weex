@@ -319,6 +319,10 @@ public class WXSDKManager {
     mBridgeManager.fireEvent(instanceId, ref, type, params);
   }
 
+  void forceRelayout(String instanceId) {
+    mWXDomManager.forceRelayout(instanceId);
+  }
+
   void createInstance(final WXSDKInstance instance, String code, Map<String, Object> options, String jsonInitData) {
     mWXRenderManager.createInstance(instance, instance.getInstanceId());
     mBridgeManager.createInstance(instance.getInstanceId(), code, options, jsonInitData);
