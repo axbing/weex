@@ -262,6 +262,7 @@ class WXDomHandler implements Handler.Callback {
                   mWXDomManager.scrollToDom(task.instanceId, (String) task.args.get(0), (JSONObject) task.args.get(1));
                   break;
             case MsgType.WX_DOM_FORCE_LAYOUT:
+                  mWXDomManager.makeDirty(task.instanceId);
                   break;
               default:
                   break;

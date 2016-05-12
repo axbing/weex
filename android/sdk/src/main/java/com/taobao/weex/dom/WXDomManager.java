@@ -347,27 +347,6 @@ public final class WXDomManager {
   }
 
   /**
-   * force relayout the whole dom tree and refresh view.
-   *
-   * @param instanceId {@link com.taobao.weex.WXSDKInstance#mInstanceId} for the instance
-   */
-  public void forceRelayout(final String instanceId) {
-    mDomHandler.post(new Runnable() {
-
-      @Override
-      public void run() {
-        WXDomStatement statement = mDomRegistries.get(instanceId);
-        if (statement == null) {
-          return;
-        }
-        statement.reCalculatecssStyle();
-        if (statement.isDirty())
-          sheduleForceLayout(instanceId);
-      }
-    });
-  }
-
-  /**
    * Invoke {@link WXDomStatement} for adding a dom node to its parent in a specific location.
    *
    * @param instanceId {@link com.taobao.weex.WXSDKInstance#mInstanceId} for the instance
@@ -584,6 +563,20 @@ public final class WXDomManager {
   }
 
   /**
+   * Notify dom is dirty. invoke by domHandler
+   * @param instanceId {@link com.taobao.weex.WXSDKInstance#mInstanceId} for the instance to
+   *                                                                    notify.
+   */
+  public void makeDirty(String instanceId) {
+    mDirty = true;
+    WXDomStatement statement = mDomRegistries.get(instanceId);
+    if (statement == null) {
+      return;
+    }
+    statement.makeDirty();
+  }
+
+  /**
    * callback of image decoder to set size if image layout size is not defined.
    *
    * @param size image decoded size
@@ -599,10 +592,28 @@ public final class WXDomManager {
         if (statement == null) {
           return;
         }
-        statement.onImageSizeChanged(size, ref);
-        if (statement.isDirty()) {
+        if (statement.onImageSizeChanged(size, ref))
           sheduleForceLayout(instanceId);
+      }
+    });
+  }
+
+  /**
+   * force relayout the whole dom tree and refresh view.
+   *
+   * @param instanceId {@link com.taobao.weex.WXSDKInstance#mInstanceId} for the instance
+   */
+  public void forceRelayout(final String instanceId) {
+    mDomHandler.post(new Runnable() {
+
+      @Override
+      public void run() {
+        WXDomStatement statement = mDomRegistries.get(instanceId);
+        if (statement == null) {
+          return;
         }
+        statement.reCalculatecssStyle();
+        sheduleForceLayout(instanceId);
       }
     });
   }
@@ -613,8 +624,8 @@ public final class WXDomManager {
    * @param instanceId {@link com.taobao.weex.WXSDKInstance#mInstanceId} for the instance
    */
   public void sheduleForceLayout(String instanceId) {
-    mDirty = true;
     WXSDKManager.getInstance().getWXBridgeManager().callModuleMethod(instanceId, "dom", "forceLayout", null);
     WXSDKManager.getInstance().getVSyncScheduler().domCommandQueueUpdated(instanceId);
   }
+
 }
