@@ -429,4 +429,15 @@ public final class WXDomModule extends WXModule implements ICommandQueue {
   public boolean isEmpty() {
       return commanList.isEmpty();
   }
-}
+
+  /**
+   * Notify the {@link WXDomManager} to relayout if dom dirty.
+   */
+  @WXModuleAnno(moduleMethod = true, runOnUIThread = false)
+  public void forceLayout() {
+    WXDomTask task = new WXDomTask();
+    task.instanceId = mWXSDKInstance.getInstanceId();
+    commanList.addCommand(WXDomHandler.MsgType.WX_DOM_FORCE_LAYOUT, task);
+  }
+
+  }

@@ -211,6 +211,7 @@ import android.os.Message;
 import com.alibaba.fastjson.JSONObject;
 import com.taobao.weex.WXEnvironment;
 import com.taobao.weex.WXSDKManager;
+import com.taobao.weex.bridge.WXModuleManager;
 import com.taobao.weex.common.WXRuntimeException;
 import com.taobao.weex.common.WXThread;
 import com.taobao.weex.ui.WXRenderManager;
@@ -561,6 +562,13 @@ public final class WXDomManager {
     }
   }
 
+  /**
+   * callback of image decoder to set size if image layout size is not defined.
+   *
+   * @param size image decoded size
+   * @param instanceId {@link com.taobao.weex.WXSDKInstance#mInstanceId} for the instance
+   * @param ref {@link WXDomObject#ref} of the dom.
+   */
   public void onImageSizeChanged(final Point size, final String instanceId, final String ref) {
     mDomHandler.post(new Runnable() {
 
@@ -571,7 +579,21 @@ public final class WXDomManager {
           return;
         }
         statement.onImageSizeChanged(size, ref);
+        if (statement.isDirty()) {
+          sheduleForceLayout(instanceId);
+        }
       }
     });
+  }
+
+  /**
+   * force layout dom tree if dirty.
+   *
+   * @param instanceId {@link com.taobao.weex.WXSDKInstance#mInstanceId} for the instance
+   */
+  public void sheduleForceLayout(String instanceId) {
+    mDirty = true;
+    WXSDKManager.getInstance().getWXBridgeManager().callModuleMethod(instanceId, "dom", "forceLayout", null);
+    WXSDKManager.getInstance().getVSyncScheduler().domCommandQueueUpdated(instanceId);
   }
 }
