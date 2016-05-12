@@ -1058,12 +1058,19 @@ class WXDomStatement {
     public WXComponent component;
   }
 
+  /**
+   * callback of image decoder to set size if image layout size is not defined.
+   *
+   * @param size image decoded size
+   * @param ref {@link WXDomObject#ref} of the dom.
+   */
   public void onImageSizeChanged(Point size, String ref) {
     WXDomObject dom =  mRegistry.get(ref);
     if (dom == null || dom.getIntrinsicSize().equals(size))
       return;
     mDirty = true;
     dom.imageChanged(size);
+    mFlushviews.add(ref);
     batch();
   }
 }

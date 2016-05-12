@@ -226,6 +226,8 @@ import com.taobao.weex.utils.WXResourceUtils;
 import com.taobao.weex.utils.WXViewUtils;
 
 import static com.taobao.weex.dom.flex.CSSLayout.DIMENSION_WIDTH;
+import static com.taobao.weex.dom.flex.CSSLayout.DIMENSION_HEIGHT;
+
 
 /**
  * Image component
@@ -234,6 +236,8 @@ public class
 WXImage extends WXComponent implements IWXImageLoaderListener {
 
   private Point m_lastImageSize = new Point(-1, -1);
+  // image width undifined should draw again when size decoded.
+  private boolean m_needUpdateBitmap = false;
 
   public WXImage(WXSDKInstance instance, WXDomObject node,
                  WXVContainer parent, String instanceId, boolean lazy) {
@@ -261,8 +265,10 @@ WXImage extends WXComponent implements IWXImageLoaderListener {
 
       if (mDomObj.attr != null) {
         if (getAbsoluteY() <= (WXViewUtils.getScreenHeight() + WXRecycleImageManager.VISIBLE_BOTTOM_SPACE)
-            || WXViewUtils.onScreenArea(getView())||!WXRecycleImageManager.isRecycleImage()) {
+            || WXViewUtils.onScreenArea(getView())||!WXRecycleImageManager.isRecycleImage() || m_needUpdateBitmap) {
           setImage(mDomObj.attr.getImageSrc(), ((ImageView) getView()));
+          if (m_needUpdateBitmap)
+            m_needUpdateBitmap = false;
         }
       }
     }
@@ -270,11 +276,12 @@ WXImage extends WXComponent implements IWXImageLoaderListener {
 
   private void notifyImageSizeChanged(final Point size) {
     // here we check dimension to avoid send used sizeData in dom thread if img has attr width. maybe we will delete it later
-    if (!Float.isNaN(mDomObj.cssstyle.dimensions[DIMENSION_WIDTH]) && mDomObj.cssstyle.dimensions[DIMENSION_WIDTH] > 0)
-      return;
+    if (!Float.isNaN(mDomObj.cssstyle.dimensions[DIMENSION_WIDTH]) && mDomObj.cssstyle.dimensions[DIMENSION_WIDTH] > 0
+            && !Float.isNaN(mDomObj.cssstyle.dimensions[DIMENSION_HEIGHT]) && mDomObj.cssstyle.dimensions[DIMENSION_HEIGHT] > 0)      return;
     if (size == null || m_lastImageSize.equals(size))
       return;
     WXSDKManager.getInstance().getWXRenderManager().onImageSizeChanged(size, mInstanceId, mDomObj.ref);
+    m_needUpdateBitmap = true;
     m_lastImageSize = size;
   }
 

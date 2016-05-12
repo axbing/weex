@@ -518,6 +518,13 @@ public final class WXDomManager {
     statement.refreshFinish();
   }
 
+  /**
+   * callback of image decoder to set size if image layout size is not defined.
+   *
+   * @param size image decoded size
+   * @param instanceId {@link com.taobao.weex.WXSDKInstance#mInstanceId} for the instance
+   * @param ref {@link WXDomObject#ref} of the dom.
+   */
   public void onImageSizeChanged(final Point size, final String instanceId, final String ref) {
     mDomHandler.post(new Runnable() {
 

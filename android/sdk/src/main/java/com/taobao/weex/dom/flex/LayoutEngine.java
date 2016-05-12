@@ -132,46 +132,55 @@ public class LayoutEngine {
     int intrinsicWidth = node.getIntrinsicSize().x;
     int intrinsicHeight = node.getIntrinsicSize().y;
     if (intrinsicWidth < 0 || intrinsicHeight < 0)
-        return;
+      return;
 
     boolean isMainRowDirection = (mainAxis == CSS_FLEX_DIRECTION_ROW || mainAxis == CSS_FLEX_DIRECTION_ROW_REVERSE);
-    float finalwidth = intrinsicWidth;
-    float finalheight = intrinsicHeight;
-    // parentMaxWidth is valid only in ColumDirection,
+    float finalWidth = intrinsicWidth;
+    float finalHeight = intrinsicHeight;
+
+    boolean parentWidthDefined = false;
+    CSSNode parent = node.getParent();
+    if (parent != null && !Float.isNaN(parent.cssstyle.dimensions[DIMENSION_WIDTH]) && parent.cssstyle.dimensions[DIMENSION_WIDTH] > 0)
+      parentWidthDefined = true;
+
+    if (!Float.isNaN(node.cssstyle.dimensions[DIMENSION_WIDTH]) && node.cssstyle.dimensions[DIMENSION_WIDTH] > 0)
+      finalWidth = node.cssstyle.dimensions[DIMENSION_WIDTH];
+    else if (!Float.isNaN(node.cssstyle.dimensions[DIMENSION_HEIGHT]) && node.cssstyle.dimensions[DIMENSION_HEIGHT] > 0)
+      finalWidth =  intrinsicWidth * node.cssstyle.dimensions[DIMENSION_HEIGHT] / intrinsicHeight;
+    else if (parentWidthDefined)
+      finalWidth = parent.cssstyle.dimensions[DIMENSION_WIDTH] - (isMainRowDirection ? getPaddingAndBorder(parent, mainAxis) :
+              getPaddingAndBorder(parent, crossAxis));
+
+    // parentMaxWidth is valid only in ColumDirection, find parent width.
+    float maxWidth = 0;
     if (isMainRowDirection) {
       // FIXME: at present, padding and border are not considered.
-      CSSNode parent = node.getParent();
-      while (parent != null) {
-        parentMaxWidth = parent.csslayout.dimensions[DIMENSION_WIDTH];
-        if (!Float.isNaN(parentMaxWidth) && parentMaxWidth > 0)
+      CSSNode parentNode = parent;
+      while (parentNode != null) {
+        if (!Float.isNaN(parentNode.csslayout.dimensions[DIMENSION_WIDTH]) && parentNode.csslayout.dimensions[DIMENSION_WIDTH] > 0)
           break;
-        parent = parent.getParent();
+        parentNode = parentNode.getParent();
       }
-      if (intrinsicWidth > parentMaxWidth) {
-        finalwidth = parentMaxWidth;
-        finalheight = intrinsicHeight * parentMaxWidth / intrinsicWidth;
-      }
+      maxWidth = parentNode.csslayout.dimensions[DIMENSION_WIDTH];
     } else {
       // FIXME: to simplefy logic,we only consider parent width constrain at present.
-      boolean parentWidthDefined = false;
-      CSSNode parent = node.getParent();
-      if (parent != null && !Float.isNaN(parent.cssstyle.dimensions[DIMENSION_WIDTH]) && parent.cssstyle.dimensions[DIMENSION_WIDTH] > 0)
-        parentWidthDefined = true;
-      if (!Float.isNaN(parentMaxWidth) && parentMaxWidth > 0 && (intrinsicWidth > parentMaxWidth || parentWidthDefined)) {
-        finalwidth = parentMaxWidth;
-        finalheight = intrinsicHeight * parentMaxWidth / intrinsicWidth;
-      }
+      if (!Float.isNaN(parentMaxWidth) && parentMaxWidth > 0)
+        maxWidth = parentMaxWidth;
     }
 
+    if (finalWidth > maxWidth)
+      finalWidth = maxWidth;
+    finalHeight = intrinsicHeight * finalWidth / intrinsicWidth;
+
     // The dimensions can never be smaller than the padding and border
-    finalwidth = isMainRowDirection ? finalwidth - getPaddingAndBorder(node, mainAxis) :
-            finalwidth - getPaddingAndBorder(node, crossAxis);
-    finalheight = isMainRowDirection ? finalheight - getPaddingAndBorder(node, crossAxis) :
-            finalheight - getPaddingAndBorder(node, mainAxis);
-    if (finalwidth < 0 || finalheight < 0)
+    finalWidth = isMainRowDirection ? finalWidth - getPaddingAndBorder(node, mainAxis) :
+            finalWidth - getPaddingAndBorder(node, crossAxis);
+    finalHeight = isMainRowDirection ? finalHeight - getPaddingAndBorder(node, crossAxis) :
+            finalHeight - getPaddingAndBorder(node, mainAxis);
+    if (finalWidth < 0 || finalHeight < 0)
       return;
-    node.setLayoutWidth(finalwidth);
-    node.setLayoutHeight(finalheight);
+    node.setLayoutWidth(finalWidth);
+    node.setLayoutHeight(finalHeight);
   }
 
   private static float getRelativePosition(CSSNode node, int axis) {
@@ -286,7 +295,8 @@ public class LayoutEngine {
     // Handle width and height cssstyle attributes
     setDimensionFromStyle(node, mainAxis);
     setDimensionFromStyle(node, crossAxis);
-    if (node.isImage() && Float.isNaN(node.cssstyle.dimensions[dim[resolvedRowAxis]])) {
+    if (node.isImage() && (Float.isNaN(node.cssstyle.dimensions[DIMENSION_WIDTH])
+            || Float.isNaN(node.cssstyle.dimensions[DIMENSION_HEIGHT]))) {
       setDimensionFromIntrinsicSize(node, parentMaxWidth, mainAxis, crossAxis);
     }
 
