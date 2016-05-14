@@ -414,7 +414,6 @@ class WXDomStatement {
       return;
     }
     transformStyle(rootDom, false);
-    mDirty = true;
   }
 
   /**

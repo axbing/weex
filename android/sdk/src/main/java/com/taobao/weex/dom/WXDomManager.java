@@ -568,12 +568,12 @@ public final class WXDomManager {
    *                                                                    notify.
    */
   public void makeDirty(String instanceId) {
-    mDirty = true;
     WXDomStatement statement = mDomRegistries.get(instanceId);
     if (statement == null) {
       return;
     }
     statement.makeDirty();
+    mDirty = true;
   }
 
   /**
