@@ -324,8 +324,6 @@ public class WXSDKManager {
   }
 
   void createInstance(final WXSDKInstance instance, String code, Map<String, Object> options, String jsonInitData) {
-    mWXRenderManager.createInstance(instance, instance.getInstanceId());
-    mBridgeManager.createInstance(instance.getInstanceId(), code, options, jsonInitData);
     mWXVSyncScheduler.createInstance(instance.getInstanceId(), new WXVSyncScheduler.Worker() {
         @Override
         public void submitLayoutTasks() {
@@ -357,6 +355,8 @@ public class WXSDKManager {
             mBridgeManager.submitDOMCommandQueue();
         }
     });
+    mWXRenderManager.createInstance(instance, instance.getInstanceId());
+    mBridgeManager.createInstance(instance.getInstanceId(), code, options, jsonInitData);
   }
 
   void refreshInstance(String instanceId, WXRefreshData jsonData) {
@@ -370,6 +370,7 @@ public class WXSDKManager {
     if (!WXUtils.isUiThread()) {
       throw new WXRuntimeException("[WXSDKManager] destroyInstance error");
     }
+    mWXVSyncScheduler.removeInstance(instanceId);
     mWXRenderManager.removeRenderStatement(instanceId);
     mWXDomManager.removeDomStatement(instanceId);
     mBridgeManager.destroyInstance(instanceId);

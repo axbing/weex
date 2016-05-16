@@ -290,6 +290,10 @@ public class WXVSyncScheduler {
         mRegistry.put(instanceId, e);
     }
 
+    public void removeInstance(String instanceId) {
+        mRegistry.remove(instanceId);
+    }
+
     private void doFrameUpdated(Entry e) {
         continueNextFrame(e);
     }
