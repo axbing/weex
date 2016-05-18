@@ -223,7 +223,7 @@ import com.taobao.weex.utils.WXViewUtils;
 /**
  * Image component
  */
-public class WXImage extends WXComponent implements IWXRecyclerViewChild {
+public class WXImage extends WXComponent {
 
   public WXImage(WXSDKInstance instance, WXDomObject node,
                  WXVContainer parent, String instanceId, boolean lazy) {
@@ -251,7 +251,7 @@ public class WXImage extends WXComponent implements IWXRecyclerViewChild {
 
       if (mDomObj.attr != null) {
         if (getAbsoluteY() <= (WXViewUtils.getScreenHeight() + WXRecycleImageManager.VISIBLE_BOTTOM_SPACE)
-            || WXViewUtils.onScreenArea(getView())) {
+            || WXViewUtils.onScreenArea(getView())||!WXRecycleImageManager.isRecycleImage()) {
           setImage(mDomObj.attr.getImageSrc(), ((ImageView) getView()));
         }
       }
@@ -324,6 +324,12 @@ public class WXImage extends WXComponent implements IWXRecyclerViewChild {
       scaleType = ScaleType.CENTER_INSIDE;
     } else if (resizeMode.equals("stretch")) {
       scaleType = ScaleType.FIT_XY;
+    }else if (resizeMode.equals("center")){
+      scaleType = ScaleType.CENTER;
+    }else if(resizeMode.equals("start")){
+      scaleType = ScaleType.FIT_START;
+    }else if(resizeMode.equals("end")){
+      scaleType = ScaleType.FIT_END;
     }
     return scaleType;
   }

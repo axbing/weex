@@ -205,6 +205,7 @@
 package com.taobao.weex;
 
 import android.content.Context;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -214,7 +215,6 @@ import com.taobao.weex.adapter.DefaultWXHttpAdapter;
 import com.taobao.weex.adapter.IWXHttpAdapter;
 import com.taobao.weex.adapter.IWXImgLoaderAdapter;
 import com.taobao.weex.adapter.IWXUserTrackAdapter;
-import com.taobao.weex.appfram.navigator.IActivityNavBarSetter;
 import com.taobao.weex.common.WXErrorCode;
 import com.taobao.weex.common.WXPerformance;
 import com.taobao.weex.common.WXRefreshData;
@@ -227,6 +227,7 @@ import com.taobao.weex.ui.component.WXComponent;
 import com.taobao.weex.ui.view.WXScrollView;
 import com.taobao.weex.ui.view.WXScrollView.WXScrollViewListener;
 import com.taobao.weex.utils.WXConst;
+import com.taobao.weex.utils.WXFileUtils;
 import com.taobao.weex.utils.WXJsonUtils;
 import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.WXReflectionUtils;
@@ -248,16 +249,15 @@ public class WXSDKInstance implements IWXActivityStateListener {
   private IWXRenderListener mRenderListener;
   private Context mContext;
   private volatile String mInstanceId;
+
+  public WXComponent getRootCom() {
+    return mRootCom;
+  }
+
   private WXComponent mRootCom;
   private boolean mRendered;
   private WXRefreshData mLastRefreshData;
 
-
-  public IActivityNavBarSetter getActivityNavBarSetter() {
-    return mActivityNavBarSetter;
-  }
-
-  private IActivityNavBarSetter mActivityNavBarSetter;
   /**
    * Render strategy.
    */
@@ -290,17 +290,6 @@ public class WXSDKInstance implements IWXActivityStateListener {
     init(context);
   }
 
-  /**
-   * WXSDKInstance constructor
-   * @param context
-   * @param activityNavBarSetter the implement of activityNavBarSetter
-   */
-  public WXSDKInstance(Context context,IActivityNavBarSetter activityNavBarSetter) {
-     init(context);
-     if(activityNavBarSetter!=null){
-       mActivityNavBarSetter = activityNavBarSetter;
-     }
-  }
 
   public void init(Context context) {
     mContext = context;
@@ -310,6 +299,9 @@ public class WXSDKInstance implements IWXActivityStateListener {
     mWXPerformance = new WXPerformance();
     mWXPerformance.WXSDKVersion = WXEnvironment.WXSDK_VERSION;
     mWXPerformance.JSLibInitTime = WXEnvironment.sJSLibInitTime;
+
+    mUserTrackAdapter=WXSDKManager.getInstance().getIWXUserTrackAdapter();
+    mWXHttpAdapter=WXSDKManager.getInstance().getIWXHttpAdapter();
   }
 
 
@@ -409,6 +401,17 @@ public class WXSDKInstance implements IWXActivityStateListener {
     if (mRendered || TextUtils.isEmpty(template)) {
       return;
     }
+
+    if(options==null){
+      options=new HashMap<>();
+    }
+
+    if(WXEnvironment.sDynamicMode && !TextUtils.isEmpty(WXEnvironment.sDynamicUrl) && options!=null && options.get("dynamicMode")==null){
+      options.put("dynamicMode","true");
+      renderByUrl(pageName,WXEnvironment.sDynamicUrl,options,jsonInitData,width,height,flag);
+      return;
+    }
+
     mWXPerformance.pageName = pageName;
     mWXPerformance.JSTemplateSize = template.length() / 1024;
 
@@ -432,6 +435,19 @@ public class WXSDKInstance implements IWXActivityStateListener {
   }
 
   public void renderByUrl(final String pageName, final String url, Map<String, Object> options, final String jsonInitData, final int width, final int height, final WXRenderStrategy flag) {
+    if (options == null) {
+      options = new HashMap<String, Object>();
+    }
+    if (!options.containsKey("bundleUrl")) {
+      options.put("bundleUrl", url);
+    }
+
+    Uri uri=Uri.parse(url);
+    if(uri!=null && TextUtils.equals(uri.getScheme(),"file")){
+      render(pageName, WXFileUtils.loadFileContent(assembleFilePath(uri), mContext),options,jsonInitData,width,height,flag);
+      return;
+    }
+
     IWXHttpAdapter adapter=WXSDKManager.getInstance().getIWXHttpAdapter();
     if (adapter == null) {
       adapter = new DefaultWXHttpAdapter();
@@ -443,16 +459,16 @@ public class WXSDKInstance implements IWXActivityStateListener {
       wxRequest.paramMap = new HashMap<String, Object>();
     }
     wxRequest.paramMap.put("user-agent", WXHttpUtil.assembleUserAgent());
-    if (options == null) {
-      options = new HashMap<String, Object>();
-    }
-    if (!options.containsKey("bundleUrl")) {
-      options.put("bundleUrl", url);
-    }
     adapter.sendRequest(wxRequest, new WXHttpListener(pageName, options, jsonInitData, width, height, flag, System.currentTimeMillis()));
     mWXHttpAdapter = adapter;
   }
 
+  private String assembleFilePath(Uri uri) {
+    if(uri!=null && uri.getPath()!=null){
+      return uri.getPath().replaceFirst("/","");
+    }
+    return "";
+  }
 
   /**
    * Refresh instance asynchronously.
@@ -524,14 +540,16 @@ public class WXSDKInstance implements IWXActivityStateListener {
     if (mScrollView == null) {
       return;
     }
-    WXSDKManager.getInstance().postOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        if (mRecycleImageManager != null) {
-          mRecycleImageManager.loadImage();
+    if (mRecycleImageManager != null && mRecycleImageManager.isRecycleImage()) {
+      WXSDKManager.getInstance().postOnUiThread(new Runnable() {
+        @Override
+        public void run() {
+          if (mRecycleImageManager != null) {
+            mRecycleImageManager.loadImage();
+          }
         }
-      }
-    }, 250);
+      }, 250);
+    }
   }
 
   /********************************
@@ -805,7 +823,7 @@ public class WXSDKInstance implements IWXActivityStateListener {
     private int width;
     private int height;
     private WXRenderStrategy flag;
-    private long startReqeustTime;
+    private long startRequestTime;
 
     private WXHttpListener(String pageName, Map<String, Object> options, String jsonInitData, int width, int height, WXRenderStrategy flag, long startRequestTime) {
       this.pageName = pageName;
@@ -814,7 +832,7 @@ public class WXSDKInstance implements IWXActivityStateListener {
       this.width = width;
       this.height = height;
       this.flag = flag;
-      this.startReqeustTime = startRequestTime;
+      this.startRequestTime = startRequestTime;
     }
 
 
@@ -836,7 +854,8 @@ public class WXSDKInstance implements IWXActivityStateListener {
     @Override
     public void onHttpFinish(WXResponse response) {
 
-      mWXPerformance.networkTime = System.currentTimeMillis() - startReqeustTime;
+      mWXPerformance.networkTime = System.currentTimeMillis() - startRequestTime;
+      WXLogUtils.renderPerformanceLog("networkTime", mWXPerformance.networkTime);
 
       if (TextUtils.equals("200", response.statusCode)) {
         String template = new String(response.originalData);

@@ -131,7 +131,6 @@ import android.content.Context;
 import android.graphics.PointF;
 import android.support.annotation.Nullable;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -147,7 +146,6 @@ import com.taobao.weex.WXSDKManager;
 import com.taobao.weex.bridge.WXBridgeManager;
 import com.taobao.weex.common.IWXObject;
 import com.taobao.weex.common.WXDomPropConstant;
-import com.taobao.weex.common.WXException;
 import com.taobao.weex.common.WXRuntimeException;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.dom.flex.Spacing;
@@ -157,6 +155,7 @@ import com.taobao.weex.ui.view.WXCircleIndicator;
 import com.taobao.weex.ui.view.gesture.WXGesture;
 import com.taobao.weex.ui.view.gesture.WXGestureObservable;
 import com.taobao.weex.ui.view.gesture.WXGestureType;
+import com.taobao.weex.ui.view.listview.BounceRecyclerView;
 import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.WXResourceUtils;
 import com.taobao.weex.utils.WXUtils;
@@ -185,7 +184,7 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
   public volatile WXVContainer mParent;
   public volatile WXDomObject mDomObj;
   public String mInstanceId;
-  public boolean registerAppearEvent;
+  public boolean registerAppearEvent=false;
   public boolean appearState=false;
   protected int mOrientation = VERTICAL;
   protected WXSDKInstance mInstance;
@@ -268,8 +267,8 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
     Spacing margin = mDomObj.getMargin();
     int realWidth = (int) mDomObj.getLayoutWidth();
     int realHeight = (int) mDomObj.getLayoutHeight();
-    int realLeft = (int) (mDomObj.getLayoutX() - parentPadding.get(Spacing.LEFT));
-    int realTop = (int) (mDomObj.getLayoutY() - parentPadding.get(Spacing.TOP));
+    int realLeft = (int) (mDomObj.getLayoutX() - parentPadding.get(Spacing.LEFT) );
+    int realTop = (int) (mDomObj.getLayoutY() - parentPadding.get(Spacing.TOP) );
     int realRight = (int) margin.get(Spacing.RIGHT);
     int realBottom = (int) margin.get(Spacing.BOTTOM);
 
@@ -340,8 +339,8 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
       ScrollView.LayoutParams params = new ScrollView.LayoutParams(realWidth, realHeight);
       params.setMargins(realLeft, realTop, realRight, realBottom);
       mHost.setLayoutParams(params);
-    } else if (mParent.getRealView() instanceof RecyclerView) {
-
+    } else if (mParent.getRealView() instanceof BounceRecyclerView) {
+//      mHost.setLayoutParams(new ViewGroup.LayoutParams(realWidth, realHeight));
       //todo Nothing
     }
 
@@ -500,14 +499,13 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
         scroller.bindDisappearEvent(this);
       }
 
-      if(TextUtils.equals(type,WXEventType.APPEAR) && getParent() instanceof WXListComponent){
-        ((WXListComponent)getParent()).bindAppearComponents(this);
+      if(type.equals(WXEventType.APPEAR) && getParent() instanceof WXListComponent){
         registerAppearEvent=true;
       }
-      if(TextUtils.equals(type,WXEventType.DISAPPEAR) && getParent() instanceof WXListComponent){
-        ((WXListComponent)getParent()).unbindAppearComponents(this);
-        registerAppearEvent=false;
+      if(type.equals(WXEventType.DISAPPEAR) && getParent() instanceof WXListComponent){
+        registerAppearEvent=true;
       }
+
     }
   }
 
@@ -642,6 +640,15 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
     }
     if (type.equals(WXEventType.DISAPPEAR) && scroller != null) {
       scroller.unbindDisappearEvent(this);
+    }
+
+    if(type.equals(WXEventType.APPEAR) && getParent() instanceof WXListComponent){
+      ((WXListComponent)getParent()).unbindAppearComponents(this);
+      registerAppearEvent=false;
+    }
+    if(type.equals(WXEventType.DISAPPEAR) && getParent() instanceof WXListComponent){
+      ((WXListComponent)getParent()).unbindAppearComponents(this);
+      registerAppearEvent=false;
     }
   }
 
@@ -818,8 +825,7 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
     try {
       return (String) getDomObject().style.get(WXDomPropConstant.WX_VISIBILITY);
     } catch (Exception e) {
-      WXLogUtils.e(WXLogUtils.getStackTrace(e));
-      return null;
+      return WXDomPropConstant.WX_VISIBILITY_VISIBLE;
     }
   }
 
@@ -892,10 +898,7 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
    *
    * @return the original View
    */
-  public View detachViewAndClearPreInfo() throws WXException {
-    //    if (!(this instanceof IWXRecyclerViewChild)) {
-    //      throw new WXException("Class " + getClass().getName() + " doesn't implement IWXRecyclerViewChild");
-    //    } else {
+  public View detachViewAndClearPreInfo() {
     View original = mHost;
     if (mBorder != null) {
       mBorder.detachView();
@@ -906,7 +909,6 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
     mPreRealTop = 0;
     mHost = null;
     return original;
-    //    }
   }
 
   /**
