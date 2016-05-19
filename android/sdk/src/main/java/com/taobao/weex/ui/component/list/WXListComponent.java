@@ -549,7 +549,7 @@ public class WXListComponent extends WXVContainer implements
 
   private void recycleImage(View view){
     if(view instanceof ImageView){
-      mInstance.getImgLoaderAdapter().setImage(null, (ImageView)view,
+      mInstance.getImgLoaderAdapter().setImage(null, (ImageView)view, null,
                                                null, null);
     }
     else if(view instanceof ViewGroup){

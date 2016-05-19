@@ -5,6 +5,7 @@
  */
 package com.taobao.weex.dom.flex;
 
+import android.graphics.Point;
 import static com.taobao.weex.dom.flex.CSSLayout.DIMENSION_HEIGHT;
 import static com.taobao.weex.dom.flex.CSSLayout.DIMENSION_WIDTH;
 import static com.taobao.weex.dom.flex.CSSLayout.POSITION_BOTTOM;
@@ -119,6 +120,69 @@ public class LayoutEngine {
     node.csslayout.dimensions[dim[axis]] = maxLayoutDimension;
   }
 
+  private static float getPaddingAndBorder(CSSNode node, int axis) {
+    return (node.cssstyle.padding.getWithFallback(leadingSpacing[axis], leading[axis]) +
+                    node.cssstyle.padding.getWithFallback(trailingSpacing[axis], trailing[axis]) +
+                    node.cssstyle.border.getWithFallback(leadingSpacing[axis], leading[axis]) +
+                    node.cssstyle.border.getWithFallback(trailingSpacing[axis], trailing[axis]));
+  }
+
+  private static void setDimensionFromIntrinsicSize(CSSNode node, float parentMaxWidth, int mainAxis, int crossAxis) {
+    // to simplefy logic , we only consider node and its parent at present.
+    int intrinsicWidth = node.getIntrinsicSize().x;
+    int intrinsicHeight = node.getIntrinsicSize().y;
+    if (intrinsicWidth < 0 || intrinsicHeight < 0)
+      return;
+
+    boolean isMainRowDirection = (mainAxis == CSS_FLEX_DIRECTION_ROW || mainAxis == CSS_FLEX_DIRECTION_ROW_REVERSE);
+    float finalWidth = intrinsicWidth;
+    float finalHeight = intrinsicHeight;
+
+    boolean parentWidthDefined = false;
+    CSSNode parent = node.getParent();
+    if (parent != null && !Float.isNaN(parent.cssstyle.dimensions[DIMENSION_WIDTH]) && parent.cssstyle.dimensions[DIMENSION_WIDTH] > 0)
+      parentWidthDefined = true;
+
+    if (!Float.isNaN(node.cssstyle.dimensions[DIMENSION_WIDTH]) && node.cssstyle.dimensions[DIMENSION_WIDTH] > 0)
+      finalWidth = node.cssstyle.dimensions[DIMENSION_WIDTH];
+    else if (!Float.isNaN(node.cssstyle.dimensions[DIMENSION_HEIGHT]) && node.cssstyle.dimensions[DIMENSION_HEIGHT] > 0)
+      finalWidth =  intrinsicWidth * node.cssstyle.dimensions[DIMENSION_HEIGHT] / intrinsicHeight;
+    else if (parentWidthDefined)
+      finalWidth = parent.cssstyle.dimensions[DIMENSION_WIDTH] - (isMainRowDirection ? getPaddingAndBorder(parent, mainAxis) :
+              getPaddingAndBorder(parent, crossAxis));
+
+    // parentMaxWidth is valid only in ColumDirection, find parent width.
+    float maxWidth = 0;
+    if (isMainRowDirection) {
+      // FIXME: at present, padding and border are not considered.
+      CSSNode parentNode = parent;
+      while (parentNode != null) {
+        if (!Float.isNaN(parentNode.csslayout.dimensions[DIMENSION_WIDTH]) && parentNode.csslayout.dimensions[DIMENSION_WIDTH] > 0)
+          break;
+        parentNode = parentNode.getParent();
+      }
+      maxWidth = parentNode.csslayout.dimensions[DIMENSION_WIDTH];
+    } else {
+      // FIXME: to simplefy logic,we only consider parent width constrain at present.
+      if (!Float.isNaN(parentMaxWidth) && parentMaxWidth > 0)
+        maxWidth = parentMaxWidth;
+    }
+
+    if (finalWidth > maxWidth)
+      finalWidth = maxWidth;
+    finalHeight = intrinsicHeight * finalWidth / intrinsicWidth;
+
+    // The dimensions can never be smaller than the padding and border
+    finalWidth = isMainRowDirection ? finalWidth - getPaddingAndBorder(node, mainAxis) :
+            finalWidth - getPaddingAndBorder(node, crossAxis);
+    finalHeight = isMainRowDirection ? finalHeight - getPaddingAndBorder(node, crossAxis) :
+            finalHeight - getPaddingAndBorder(node, mainAxis);
+    if (finalWidth < 0 || finalHeight < 0)
+      return;
+    node.setLayoutWidth(finalWidth);
+    node.setLayoutHeight(finalHeight);
+  }
+
   private static float getRelativePosition(CSSNode node, int axis) {
     float lead = node.cssstyle.position[leading[axis]];
     if (!Float.isNaN(lead)) {
@@ -231,6 +295,10 @@ public class LayoutEngine {
     // Handle width and height cssstyle attributes
     setDimensionFromStyle(node, mainAxis);
     setDimensionFromStyle(node, crossAxis);
+    if (node.isImage() && (Float.isNaN(node.cssstyle.dimensions[DIMENSION_WIDTH])
+            || Float.isNaN(node.cssstyle.dimensions[DIMENSION_HEIGHT]))) {
+      setDimensionFromIntrinsicSize(node, parentMaxWidth, mainAxis, crossAxis);
+    }
 
     // Set the resolved resolution in the node's csslayout
     node.csslayout.direction = direction;

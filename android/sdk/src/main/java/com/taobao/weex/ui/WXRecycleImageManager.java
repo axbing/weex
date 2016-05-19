@@ -212,6 +212,7 @@ import com.taobao.weex.common.WXImageSharpen;
 import com.taobao.weex.common.WXImageStrategy;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.ui.component.WXComponent;
+import com.taobao.weex.ui.component.WXImage;
 import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.WXViewUtils;
 
@@ -312,14 +313,16 @@ public class WXRecycleImageManager {
         WXDomObject element = component.getDomObject();
         WXImageSharpen waImageSharpen = element.attr.getImageSharpen();
         waImageStrategy.isSharpen = waImageSharpen == WXImageSharpen.SHARPEN;
+        if (!(component instanceof WXImage))
+            return;
         mInstance.getImgLoaderAdapter().setImage(
-            url == null ? null : url.toString(),
-            (ImageView) component.getView(),
-            element.attr.getImageQuality(),
-            waImageStrategy);
+          url == null ? null : url.toString(),
+          (ImageView) component.getView(),
+          element.attr.getImageQuality(),
+          waImageStrategy, (WXImage)component);
       } else {
         mInstance.getImgLoaderAdapter().setImage(null, (ImageView) component.getView(),
-                                                 null, null);
+                                                 null, null, null);
       }
     } catch (Exception e) {
       WXLogUtils.e("[WXRecycleImageManager] setImage error: " + WXLogUtils.getStackTrace(e));

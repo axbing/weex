@@ -204,6 +204,7 @@
  */
 package com.taobao.weex.dom;
 
+import android.graphics.Point;
 import android.os.Handler;
 import android.os.Message;
 
@@ -515,5 +516,26 @@ public final class WXDomManager {
       return;
     }
     statement.refreshFinish();
+  }
+
+  /**
+   * callback of image decoder to set size if image layout size is not defined.
+   *
+   * @param size image decoded size
+   * @param instanceId {@link com.taobao.weex.WXSDKInstance#mInstanceId} for the instance
+   * @param ref {@link WXDomObject#ref} of the dom.
+   */
+  public void onImageSizeChanged(final Point size, final String instanceId, final String ref) {
+    mDomHandler.post(new Runnable() {
+
+      @Override
+      public void run() {
+        WXDomStatement statement = mDomRegistries.get(instanceId);
+        if (statement == null) {
+          return;
+        }
+        statement.onImageSizeChanged(size, ref);
+      }
+    });
   }
 }

@@ -7,6 +7,7 @@ package com.taobao.weex.dom.flex;
 
 //import javax.annotation.Nullable;
 
+import android.graphics.Point;
 import java.util.ArrayList;
 
 import static com.taobao.weex.dom.flex.CSSLayout.DIMENSION_HEIGHT;
@@ -37,6 +38,8 @@ public class CSSNode {
   private MeasureFunction mMeasureFunction = null;
   private LayoutState mLayoutState = LayoutState.DIRTY;
   private boolean mShow = true;
+  private Point mIntrinsicSize = new Point(-1, -1);
+  private boolean misImage = false;
 
   public boolean isShow() {
     return mShow;
@@ -550,5 +553,21 @@ public class CSSNode {
      * NB: measure is NOT guaranteed to be threadsafe/re-entrant safe!
      */
     public void measure(CSSNode node, float width, MeasureOutput measureOutput);
+  }
+
+  public void setIntrinsicSize (Point size) {
+    mIntrinsicSize = size;
+  }
+
+  public Point getIntrinsicSize () {
+    return mIntrinsicSize;
+  }
+
+  public void  setIsImage() {
+    misImage = true;
+  }
+
+  public boolean  isImage() {
+    return misImage;
   }
 }

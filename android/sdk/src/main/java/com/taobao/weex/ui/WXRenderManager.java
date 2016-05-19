@@ -204,6 +204,7 @@
  */
 package com.taobao.weex.ui;
 
+import android.graphics.Point;
 import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.common.WXRuntimeException;
 import com.taobao.weex.dom.WXDomObject;
@@ -440,4 +441,11 @@ public class WXRenderManager {
     }
     statement.startAnimation(ref, animation, callBack);
   }
+  public void onImageSizeChanged(Point size, String instanceId, String ref) {
+    WXRenderStatement statement = mRegistries.get(instanceId);
+    if (statement == null) {
+      return;
+    }
+    statement.onImageSizeChanged(size, ref);
+  };
 }
