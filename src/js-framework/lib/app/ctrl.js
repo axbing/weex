@@ -84,6 +84,9 @@ export function destroy() {
   this.options = null
   this.blocks = null
   this.vm = null
+  if (this.doc) {
+      this.doc.destory()
+  }
   this.doc = null
   this.customComponentMap = null
   this.callbacks = null
@@ -96,17 +99,9 @@ export function getRootElement() {
 }
 
 export function updateActions(addonTasks) {
-  this.differ.flush()
-  const tasks = []
-  if (this.listener && this.listener.updates.length) {
-    tasks.push(...this.listener.updates)
-    this.listener.updates = []
-  }
+  this.differ.flush();
   if (addonTasks && addonTasks.length) {
-    tasks.push(...addonTasks)
-  }
-  if (tasks.length) {
-    this.callTasks(tasks)
+    this.addActions(addonTasks);
   }
 }
 
@@ -171,6 +166,21 @@ export function refreshData(data) {
   return new Error(`invalid data "${data}"`)
 }
 
+export function addActions(action) {
+    this.listener.addActions(action);
+}
+
+export function submitTasks() {
+    var tasks = [];
+    if (this.listener) {
+      this.listener.postTasks(tasks);
+    }
+
+    if (tasks.length > 0)
+        this.callTasks(tasks);
+    this.listener.updateSent = false;
+}
+
 function updateElement(el, changes) {
   const attrs = changes.attrs || {}
   for (const name in attrs) {
@@ -181,4 +191,3 @@ function updateElement(el, changes) {
     el.setStyle(name, style[name])
   }
 }
-

@@ -20,20 +20,20 @@ export function Document(id) {
   this.createDocumentElement()
 }
 
-export function destroyDocument(id) {
+function destroyDocument(id) {
   delete instanceMap[id]
 }
 
 Document.prototype.open = function () {
   this.closed = false
   if (this.listener) {
-    this.listener.batched = false
+      this.listener.batched = false;
   }
 }
 Document.prototype.close = function () {
   this.closed = true
   if (this.listener) {
-    this.listener.batched = true
+    this.listener.batched = true;
   }
 }
 
@@ -43,7 +43,7 @@ Document.prototype.setEventManager = function (eventManager) {
 
 Document.prototype.setListener = function (listener) {
   this.listener = listener
-  listener.batched = !!this.closed
+  listener.batched = !!this.closed;
 }
 
 Document.prototype.addRef = function (el) {
@@ -88,6 +88,10 @@ Document.prototype.createElement = function (tagName, props) {
 
 Document.prototype.createComment = function (text) {
   return new Comment(text, this)
+}
+
+Document.prototype.destroy = function () {
+    destroyDocument(this.id)
 }
 
 export function Node() {

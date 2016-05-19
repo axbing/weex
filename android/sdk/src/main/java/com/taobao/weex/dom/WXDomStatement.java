@@ -267,6 +267,11 @@ class WXDomStatement {
   private boolean mDestroy;
   private Map<String, AddDomInfo> mAddDom = new HashMap<>();
 
+  boolean isDirty() {
+    return mDirty;
+  }
+
+
   /**
    * Create an instance of {@link WXDomStatement},
    * One {@link WXSDKInstance} corresponding to one and only one {@link WXDomStatement}.
@@ -376,14 +381,22 @@ class WXDomStatement {
     updateDomObj();
     int count = mNormalTasks.size();
     for (int i = 0; i < count && !mDestroy; ++i) {
-      mWXRenderManager.runOnThread(mInstanceId, mNormalTasks.get(i));
+        mWXRenderManager.submitRenderTask(mInstanceId, mNormalTasks.get(i));
     }
     for(String ref: mFlushviews){
-      mWXRenderManager.flushView(mInstanceId,ref);
+      mWXRenderManager.submitFlushViewTask(mInstanceId,ref);
     }
     mFlushviews.clear();
     mNormalTasks.clear();
     mAddDom.clear();
+
+    Iterator<String> iterator = mUpdate.iterator();
+    while (iterator.hasNext()) {
+      String ref = iterator.next();
+      mWXRenderManager.submitFlushViewTask(mInstanceId, ref);
+    }
+    mWXRenderManager.layouted(mInstanceId);
+
     mUpdate.clear();
     mDirty = false;
   }

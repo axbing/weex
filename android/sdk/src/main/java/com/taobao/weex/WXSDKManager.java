@@ -141,6 +141,7 @@ import com.taobao.weex.common.WXRefreshData;
 import com.taobao.weex.common.WXRuntimeException;
 import com.taobao.weex.dom.WXDomManager;
 import com.taobao.weex.ui.WXRenderManager;
+import com.taobao.weex.ui.WXVSyncScheduler;
 import com.taobao.weex.utils.WXUtils;
 
 import java.util.ArrayList;
@@ -158,6 +159,7 @@ public class WXSDKManager {
   private final WXDomManager mWXDomManager;
   private WXBridgeManager mBridgeManager;
   private WXRenderManager mWXRenderManager;
+  private WXVSyncScheduler mWXVSyncScheduler;
 
   private IWXUserTrackAdapter mIWXUserTrackAdapter;
   private IWXImgLoaderAdapter mIWXImgLoaderAdapter;
@@ -168,6 +170,7 @@ public class WXSDKManager {
     mWXRenderManager = new WXRenderManager();
     mWXDomManager = new WXDomManager(mWXRenderManager);
     mBridgeManager = WXBridgeManager.getInstance();
+    mWXVSyncScheduler = new WXVSyncScheduler();
   }
 
   public static WXSDKManager getInstance() {
@@ -184,6 +187,10 @@ public class WXSDKManager {
 //  void setActivityNavBarSetter(IActivityNavBarSetter mActivityNavBarSetter) {
 //    this.mActivityNavBarSetter = mActivityNavBarSetter;
 //  }
+
+  public WXVSyncScheduler getVSyncScheduler() {
+      return mWXVSyncScheduler;
+  }
 
   public void restartBridge() {
     mBridgeManager.restart();
@@ -245,9 +252,40 @@ public class WXSDKManager {
     mBridgeManager.fireEvent(instanceId, ref, type, params);
   }
 
-  void createInstance(WXSDKInstance instance, String code, Map<String, Object> options, String jsonInitData) {
+  void createInstance(final WXSDKInstance instance, String code, Map<String, Object> options, String jsonInitData) {
     mWXRenderManager.createInstance(instance, instance.getInstanceId());
     mBridgeManager.createInstance(instance.getInstanceId(), code, options, jsonInitData);
+    mWXVSyncScheduler.createInstance(instance.getInstanceId(), new WXVSyncScheduler.Worker() {
+        @Override
+        public void submitLayoutTasks() {
+            mBridgeManager.submitTasks(instance.getInstanceId());
+        }
+
+        @Override
+        public void submitDisplayTasks() {
+            mWXRenderManager.submitDisplayTasks(instance.getInstanceId());
+        }
+
+        @Override
+        public void requestNextVSync() {
+            postOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    WXSDKManager.this.mWXVSyncScheduler.vsyncAcquired(instance.getInstanceId());
+                }
+            }, 16);
+        }
+
+        @Override
+        public String getInstanceId() {
+            return instance.getInstanceId();
+        }
+
+        @Override
+        public void submitDOMCommandQueue() {
+            mBridgeManager.submitDOMCommandQueue();
+        }
+    });
   }
 
   void refreshInstance(String instanceId, WXRefreshData jsonData) {
