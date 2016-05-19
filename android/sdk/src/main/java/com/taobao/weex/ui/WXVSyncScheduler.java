@@ -287,11 +287,15 @@ public class WXVSyncScheduler {
         Entry e = new Entry();
         e.worker = worker;
         e.stateMachine = new WXVSyncStateMachine(new VSyncCallback(e));
-        mRegistry.put(instanceId, e);
+        synchronized(mRegistry) {
+            mRegistry.put(instanceId, e);
+        }
     }
 
     public void removeInstance(String instanceId) {
-        mRegistry.remove(instanceId);
+        synchronized(mRegistry) {
+            mRegistry.remove(instanceId);
+        }
     }
 
     private void doFrameUpdated(Entry e) {
@@ -340,7 +344,10 @@ public class WXVSyncScheduler {
     }
 
     private Entry getEntry(String instanceId) {
-        Entry e = mRegistry.get(instanceId);
+        Entry e = null;
+        synchronized(mRegistry) {
+            e = mRegistry.get(instanceId);
+        }
         if (e == null) {
             throw new IllegalStateException("getEntry get null entry for instanceId: " + instanceId);
         }
