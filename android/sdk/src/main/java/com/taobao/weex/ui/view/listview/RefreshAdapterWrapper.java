@@ -205,7 +205,7 @@
 package com.taobao.weex.ui.view.listview;
 
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
+import android.mini.support.v7.widget.RecyclerView;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;

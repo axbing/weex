@@ -134,7 +134,7 @@ import com.taobao.weex.adapter.DefaultWXHttpAdapter;
 import com.taobao.weex.adapter.IWXHttpAdapter;
 import com.taobao.weex.adapter.IWXImgLoaderAdapter;
 import com.taobao.weex.adapter.IWXUserTrackAdapter;
-import com.taobao.weex.appfram.navigator.IActivityNavBarSetter;
+//import com.taobao.weex.appfram.navigator.IActivityNavBarSetter;
 import com.taobao.weex.bridge.WXBridgeManager;
 import com.taobao.weex.bridge.WXModuleManager;
 import com.taobao.weex.common.WXRefreshData;
@@ -162,7 +162,7 @@ public class WXSDKManager {
   private IWXUserTrackAdapter mIWXUserTrackAdapter;
   private IWXImgLoaderAdapter mIWXImgLoaderAdapter;
   private IWXHttpAdapter mIWXHttpAdapter;
-  private IActivityNavBarSetter mActivityNavBarSetter;
+  //private IActivityNavBarSetter mActivityNavBarSetter;
 
   private WXSDKManager() {
     mWXRenderManager = new WXRenderManager();
@@ -177,13 +177,13 @@ public class WXSDKManager {
     return sManager;
   }
 
-  IActivityNavBarSetter getActivityNavBarSetter() {
-    return mActivityNavBarSetter;
-  }
-
-  void setActivityNavBarSetter(IActivityNavBarSetter mActivityNavBarSetter) {
-    this.mActivityNavBarSetter = mActivityNavBarSetter;
-  }
+//  IActivityNavBarSetter getActivityNavBarSetter() {
+//    return mActivityNavBarSetter;
+//  }
+//
+//  void setActivityNavBarSetter(IActivityNavBarSetter mActivityNavBarSetter) {
+//    this.mActivityNavBarSetter = mActivityNavBarSetter;
+//  }
 
   public void restartBridge() {
     mBridgeManager.restart();

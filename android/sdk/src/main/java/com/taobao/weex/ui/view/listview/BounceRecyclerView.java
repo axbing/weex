@@ -205,8 +205,8 @@
 package com.taobao.weex.ui.view.listview;
 
 import android.content.Context;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+import android.mini.support.v7.widget.LinearLayoutManager;
+import android.mini.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.View;
 
