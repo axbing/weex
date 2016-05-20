@@ -53,6 +53,7 @@
 	      items: [
 	        {name: 'hello', title: 'Hello World'},
 	        {name: 'image-demo', title: 'Image'},
+	        {name: 'gesture', title: 'Gesture'},
 	        {name: 'text-demo', title: 'Text'},
 	        {name: 'common', title: 'Common Style'},
 	        {name: 'list-basic', title: 'List (Basic)'},
