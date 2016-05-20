@@ -422,7 +422,6 @@ class WXDomStatement {
       return;
     }
     transformStyle(rootDom, false);
-    mDirty = true;
   }
 
   /**
@@ -1086,13 +1085,17 @@ class WXDomStatement {
    * @param size image decoded size
    * @param ref {@link WXDomObject#ref} of the dom.
    */
-  public void onImageSizeChanged(Point size, String ref) {
+  public boolean onImageSizeChanged(Point size, String ref) {
     WXDomObject dom =  mRegistry.get(ref);
     if (dom == null || dom.getIntrinsicSize().equals(size))
-      return;
-    mDirty = true;
+      return false;
+
     dom.imageChanged(size);
     mFlushviews.add(ref);
-    batch();
+    return true;
+  }
+
+  public void makeDirty() {
+    mDirty = true;
   }
 }

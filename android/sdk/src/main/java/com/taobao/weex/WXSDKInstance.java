@@ -398,7 +398,7 @@ public class WXSDKInstance implements IWXActivityStateListener {
    * @param flag     RenderStrategy {@link WXRenderStrategy}
    */
   public void render(String pageName, String template, Map<String, Object> options, String jsonInitData, int width, int height, WXRenderStrategy flag) {
-    if ((mRendered || TextUtils.isEmpty(template)) && (mGodViewWidth == width)) {
+    if ((mRendered || TextUtils.isEmpty(template)) && (mGodViewWidth == width && mGodViewHeight == height)) {
       return;
     }
 
