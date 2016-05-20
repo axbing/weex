@@ -240,13 +240,17 @@ public class WXModuleManager {
   private static Map<String, Class<? extends WXModule>> sModuleClazzMap = new HashMap<>();
   private static Map<String, WXModule> sGlobalModuleMap = new HashMap<>();
   private static Map<WXModule, HashMap<String, Method>> sGlobalModuleMethodMap = new HashMap<>();
-  private static ArrayList<ICommandQueue> sCommandQueues = new ArrayList<>();
+
+  private static class InstanceModuleDesc {
+      HashMap<String, WXModule> mCache = new HashMap<>();
+      ArrayList<ICommandQueue> mCommandQueues = new ArrayList<>();
+  }
 
   /**
    * module object dictionary
    * K : instanceId, V : Modules
    */
-  private static Map<String, HashMap<String, WXModule>> sInstanceModuleMap = new HashMap<>();
+  private static Map<String, InstanceModuleDesc> sInstanceModuleMap = new HashMap<>();
 
   /**
    * module object method dictionary
@@ -258,9 +262,9 @@ public class WXModuleManager {
     return registerModule(moduleName, moduleClass, false);
   }
 
-  private static void addIfCommandQueue(Object o) {
+  private static void addIfCommandQueue(InstanceModuleDesc instanceModuleDesc, Object o) {
       if (o instanceof ICommandQueue) {
-          sCommandQueues.add((ICommandQueue)o);
+          instanceModuleDesc.mCommandQueues.add((ICommandQueue)o);
       }
   }
 
@@ -296,7 +300,9 @@ public class WXModuleManager {
         sGlobalModuleMap.put(moduleName, wxModule);
         HashMap<String, Method> methodsMap = getModuleMethods2Map(moduleClass);
         sGlobalModuleMethodMap.put(wxModule, methodsMap);
-        addIfCommandQueue(wxModule);
+        if (wxModule instanceof ICommandQueue) {
+          throw new IllegalArgumentException("a command queue should not be registered into global module map.");
+        }
       } catch (Exception e) {
         WXLogUtils.e(moduleClass + " class must have a default constructor without params. " + WXLogUtils.getStackTrace(e));
         return false;
@@ -383,14 +389,16 @@ public class WXModuleManager {
     return true;
   }
 
-  static void submitCommandQueues() {
-    for (ICommandQueue queue : sCommandQueues) {
+  static void submitCommandQueues(String instanceId) {
+    InstanceModuleDesc instanceModuleDesc = findInstanceModuleDesc(instanceId);
+    for (ICommandQueue queue : instanceModuleDesc.mCommandQueues) {
       queue.submit();
     }
   }
 
-  static boolean isCommandQueuesEmpty() {
-    for (ICommandQueue queue : sCommandQueues) {
+  static boolean isCommandQueuesEmpty(String instanceId) {
+    InstanceModuleDesc instanceModuleDesc = findInstanceModuleDesc(instanceId);
+    for (ICommandQueue queue : instanceModuleDesc.mCommandQueues) {
         if (!queue.isEmpty()) {
             return false;
         }
@@ -398,16 +406,22 @@ public class WXModuleManager {
     return true;
   }
 
+  private static InstanceModuleDesc findInstanceModuleDesc(String instanceId) {
+      InstanceModuleDesc instanceModuleDesc = sInstanceModuleMap.get(instanceId);
+      if (instanceModuleDesc == null) {
+        instanceModuleDesc = new InstanceModuleDesc();
+        sInstanceModuleMap.put(instanceId, instanceModuleDesc);
+      }
+      return instanceModuleDesc;
+  }
+
   private static WXModule findModule(String instanceId, String moduleStr, String methodStr) {
     // find WXModule
     WXModule wxModule = sGlobalModuleMap.get(moduleStr);
     Class<? extends WXModule> moduleClass = sModuleClazzMap.get(moduleStr);
     if (wxModule == null) {
-      HashMap<String, WXModule> moduleMap = sInstanceModuleMap.get(instanceId);
-      if (moduleMap == null) {
-        moduleMap = new HashMap<>();
-        sInstanceModuleMap.put(instanceId, moduleMap);
-      }
+      InstanceModuleDesc instanceModuleDesc = findInstanceModuleDesc(instanceId);
+      HashMap<String, WXModule> moduleMap = instanceModuleDesc.mCache;
       // if cannot find the Module, create a new Module and save it
       wxModule = moduleMap.get(moduleStr);
       if (wxModule == null) {
@@ -418,7 +432,7 @@ public class WXModuleManager {
           return null;
         }
         moduleMap.put(moduleStr, wxModule);
-        addIfCommandQueue(wxModule);
+        addIfCommandQueue(instanceModuleDesc, wxModule);
         // set instance
         wxModule.mWXSDKInstance = WXSDKManager.getInstance().getSDKInstance(instanceId);
       }
@@ -435,16 +449,7 @@ public class WXModuleManager {
   }
 
   public static void destroyInstanceModules(String instanceId) {
-    HashMap<String, WXModule> moduleMap = sInstanceModuleMap.remove(instanceId);
-    if (moduleMap == null || moduleMap.size() < 1) {
-      return;
-    }
-    Iterator<Entry<String, WXModule>> iterator = moduleMap.entrySet().iterator();
-    Entry<String, WXModule> entry;
-    while (iterator.hasNext()) {
-      entry = iterator.next();
-      sInstanceModuleMethodMap.remove(entry.getValue());
-    }
+    sInstanceModuleMap.remove(instanceId);
   }
 
 }

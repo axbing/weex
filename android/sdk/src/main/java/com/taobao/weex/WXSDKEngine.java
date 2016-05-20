@@ -350,7 +350,7 @@ public class WXSDKEngine {
       registerComponent(WXBasicComponentType.LOADING, WXLoading.class);
       registerComponent(WXBasicComponentType.LOADING_INDICATOR, WXLoadingIndicator.class);
 
-      WXModuleManager.registerModule("dom", WXDomModule.class, true);
+      WXModuleManager.registerModule("dom", WXDomModule.class, false);
       WXModuleManager.registerModule("modal", WXModalUIModule.class, true);
       WXModuleManager.registerModule("instanceWrap", WXInstanceWrap.class, true);
       WXModuleManager.registerModule("animation", WXAnimationModule.class, true);

@@ -1037,12 +1037,12 @@ public class WXBridgeManager implements Callback {
   }
 
   private static void doCheckCommandQueue(String instanceId) {
-    if (!WXModuleManager.isCommandQueuesEmpty()) {
+    if (!WXModuleManager.isCommandQueuesEmpty(instanceId)) {
         WXSDKManager.getInstance().getVSyncScheduler().domCommandQueueUpdated(instanceId);
     }
   }
 
-  public void submitDOMCommandQueue() {
-      WXModuleManager.submitCommandQueues();
+  public void submitDOMCommandQueue(String instanceId) {
+      WXModuleManager.submitCommandQueues(instanceId);
   }
 }

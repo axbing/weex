@@ -285,7 +285,7 @@ public class WXSDKManager {
 
         @Override
         public void submitDOMCommandQueue() {
-            mBridgeManager.submitDOMCommandQueue();
+            mBridgeManager.submitDOMCommandQueue(instance.getInstanceId());
         }
     });
     mWXRenderManager.createInstance(instance, instance.getInstanceId());
