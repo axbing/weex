@@ -141,7 +141,13 @@ export function $sendHttp(params, callback) {
  */
 export function $openURL(url) {
   const event = this._app.requireModule('event')
-  event.openURL(url)
+  if(event && event.openURL) {
+    event.openURL(url)
+  } else {
+    const w = this._app.requireModule('window')
+    if (w)
+      w.load({'url':url})
+  }
 }
 
 /**
@@ -150,7 +156,13 @@ export function $openURL(url) {
  */
 export function $setTitle(title) {
   const pageInfo = this._app.requireModule('pageInfo')
-  pageInfo.setTitle(title)
+  if(pageInfo && pageInfo.setTitle) {
+    pageInfo.setTitle(title)
+  } else {
+    const w = this._app.requireModule('window')
+    if (w)
+      w.setTitle(title)
+  }
 }
 
 /**
