@@ -207,6 +207,7 @@ package com.taobao.weex.ui.component;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -221,18 +222,31 @@ import com.taobao.weex.ui.view.WXVideoView;
 import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.WXResourceUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class WXVideo extends WXComponent {
 
   private WXVideoView mVideoView;
+  private MediaController mController;
   private boolean mAutoPlay;
   private String mSrc;
   private boolean mSrcChanged;
   private boolean mPrepared;
   private boolean mError;
   private ProgressBar mProgressBar;
+  public static final Map<String, List<WXVideo>> sAllVideos = new ConcurrentHashMap<String, List<WXVideo>>();
 
   public WXVideo(WXSDKInstance instance, WXDomObject dom, WXVContainer parent, String instanceId, boolean isLazy) {
     super(instance, dom, parent, instanceId, isLazy);
+    List<WXVideo> list = sAllVideos.get(mInstanceId);
+    if (list == null) {
+      list = new ArrayList<WXVideo>();
+      sAllVideos.put(mInstanceId, list);
+    }
+    list.add(this);
   }
 
   @Override
@@ -256,9 +270,9 @@ public class WXVideo extends WXComponent {
     pLayoutParams.gravity = Gravity.CENTER;
     videoRoot.addView(mProgressBar);
 
-    final MediaController controller = new MediaController(mContext);
+    mController = new MediaController(mContext);
 
-    controller.setAnchorView(videoRoot);
+    mController.setAnchorView(videoRoot);
 
     mVideoView.setOnErrorListener(new MediaPlayer.OnErrorListener() {
 
@@ -292,9 +306,9 @@ public class WXVideo extends WXComponent {
         }
         mVideoView.seekTo(5);
         if(!mStopped) {
-          controller.show(3);
+          mController.show(3);
         }else {
-          controller.hide();
+          mController.hide();
         }
         mStopped = false;
       }
@@ -337,8 +351,8 @@ public class WXVideo extends WXComponent {
       }
     });
 
-    mVideoView.setMediaController(controller);
-    controller.setMediaPlayer(mVideoView);
+    mVideoView.setMediaController(mController);
+    mController.setMediaPlayer(mVideoView);
 
     mHost = videoRoot;
   }
@@ -357,6 +371,10 @@ public class WXVideo extends WXComponent {
   @Override
   public void destroy() {
     super.destroy();
+    List<WXVideo> list = sAllVideos.get(mInstanceId);
+    if (list != null) {
+      list.remove(this);
+    }
   }
 
   @WXComponentProp(name = "src")
@@ -392,5 +410,13 @@ public class WXVideo extends WXComponent {
       mVideoView.resume();
       mProgressBar.setVisibility(View.VISIBLE);
     }
+  }
+
+  public WXVideoView getVideoView() {
+    return mVideoView;
+  }
+
+  public MediaController getController() {
+      return mController;
   }
 }
