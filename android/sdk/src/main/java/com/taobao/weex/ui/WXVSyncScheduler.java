@@ -251,28 +251,37 @@ public class WXVSyncScheduler {
 
     public void frameUpdated(String instanceId) {
         Entry e = getEntry(instanceId);
-
+        if (e == null)
+            return;
         e.stateMachine.frameUpdated();
     }
 
     public void frameDisplaying(String instanceId) {
         Entry e = getEntry(instanceId);
+        if (e == null)
+            return;
         WXLogUtils.d("frameDisplaying: instanceId: " + instanceId + "; stateMachine: " + e.stateMachine.getState() + "; pending: " + e.stateMachine.getPending());
         e.stateMachine.frameDisplaying();
     }
 
     public void vsyncAcquired(String instanceId) {
         Entry e = getEntry(instanceId);
+        if (e == null)
+            return;
         e.stateMachine.vsyncAcquired();
     }
 
     public void layouted(String instanceId) {
         Entry e = getEntry(instanceId);
+        if (e == null)
+            return;
         e.stateMachine.layouted();
     }
 
     public void domCommandQueueUpdated(String instanceId) {
         Entry e = getEntry(instanceId);
+        if (e == null)
+            return;
         e.stateMachine.domCommandQueueUpdated();
     }
 
@@ -347,9 +356,6 @@ public class WXVSyncScheduler {
         Entry e = null;
         synchronized(mRegistry) {
             e = mRegistry.get(instanceId);
-        }
-        if (e == null) {
-            throw new IllegalStateException("getEntry get null entry for instanceId: " + instanceId);
         }
         return e;
     }
