@@ -262,7 +262,9 @@ WXImage extends WXComponent implements IWXImageLoaderListener {
       if (getView() instanceof IWXUpdateComponent) {
         ((IWXUpdateComponent) getView()).updateDom(mDomObj);
       }
-
+      if (viewRecycled()) {
+        return;
+      }
       if (mDomObj.attr != null) {
         if (getAbsoluteY() <= (WXViewUtils.getScreenHeight() + WXRecycleImageManager.VISIBLE_BOTTOM_SPACE)
             || WXViewUtils.onScreenArea(getView())||!WXRecycleImageManager.isRecycleImage() || m_needUpdateBitmap) {

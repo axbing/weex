@@ -374,7 +374,10 @@ public class WXListComponent extends WXVContainer implements
   @Override
   public void onViewRecycled(ListBaseViewHolder holder) {
     recycleImage(holder.itemView);
-    WXLogUtils.d(TAG, "Recycle holder "+holder);
+    WXComponent component = getChild(holder.getLayoutPosition());
+    if (component != null)
+      component.notifyViewRecycled(true);
+    WXLogUtils.d(TAG, "Recycle holder " + holder);
   }
 
   /**
@@ -390,8 +393,9 @@ public class WXListComponent extends WXVContainer implements
         && indoreCells.contains(getItemViewType(position))){
       return;
     }
-    if(component!=null){
+    if(component != null){
       component.bind(null);
+      component.notifyViewRecycled(false);
       component.flushView();
     }
     WXLogUtils.d(TAG, "Bind holder "+holder);
@@ -553,7 +557,7 @@ public class WXListComponent extends WXVContainer implements
                                                null, null);
     }
     else if(view instanceof ViewGroup){
-      for(int i=0;i<((ViewGroup) view).getChildCount();i++){
+      for(int i=0; i<((ViewGroup) view).getChildCount(); i++){
         recycleImage(((ViewGroup) view).getChildAt(i));
       }
     }
