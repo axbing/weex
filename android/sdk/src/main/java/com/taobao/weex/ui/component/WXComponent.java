@@ -200,6 +200,7 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
   private int mPreRealLeft = 0;
   private int mPreRealTop = 0;
   private WXGesture wxGesture;
+  private boolean mViewIsRecycled = false;
 
   public WXComponent(WXSDKInstance instance, WXDomObject dom, WXVContainer parent, String instanceId, boolean isLazy) {
     mInstance = instance;
@@ -912,16 +913,23 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
     return original;
   }
 
-  /**
-   * This method computes user visible left-top point in view's coordinate.
-   * The default implementation uses the scrollX and scrollY of the view as the result,
-   * and put the value in the parameter pointer.
-   * Components with different computation algorithm
-   * (e.g. {@link WXListComponent#computeVisiblePointInViewCoordinate(PointF)} )
-   * <strong> should override </strong> this method.
-   *
-   * @param pointF the user visible left-top point in view's coordinate.
-   */
+  public void notifyViewRecycled(boolean isRecycled) {
+    mViewIsRecycled = isRecycled;
+  }
+
+  public boolean viewRecycled() {
+    return mViewIsRecycled;
+  }
+    /**
+     * This method computes user visible left-top point in view's coordinate.
+     * The default implementation uses the scrollX and scrollY of the view as the result,
+     * and put the value in the parameter pointer.
+     * Components with different computation algorithm
+     * (e.g. {@link WXListComponent#computeVisiblePointInViewCoordinate(PointF)} )
+     * <strong> should override </strong> this method.
+     *
+     * @param pointF the user visible left-top point in view's coordinate.
+     */
   public void computeVisiblePointInViewCoordinate(PointF pointF) {
     View view = getRealView();
     pointF.set(view.getScrollX(), view.getScrollY());

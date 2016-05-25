@@ -96,6 +96,7 @@ public class ImageAdapter implements IWXImgLoaderAdapter {
       @Override
       public void run() {
         if (TextUtils.isEmpty(url)) {
+          Picasso.with(WXEnvironment.getApplication()).cancelRequest(view);
           view.setImageBitmap(null);
           return;
         }
