@@ -202,215 +202,185 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.taobao.weex.ui.view;
+package com.taobao.weex.theme;
 
-import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.net.http.SslError;
-import android.view.Gravity;
-import android.view.View;
-import android.webkit.SslErrorHandler;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
-import android.widget.ProgressBar;
 
-import com.taobao.weex.utils.WXLogUtils;
-import com.taobao.weex.theme.WXThemeManager;
+import java.lang.Float;
+import java.lang.Math;
+
 import com.taobao.weex.theme.WXThemeManager.ThemeColorType;
 
-public class WXWebView implements IWebView {
+class NMColor {
+    public static final int BACKGROUND = 0xFF0F1012;
+    public static final int BIG_MUL_BACKGROUND = 0xFF202020;
+    public static final int MEDIUM_MUL_BACKGROUND = 0xFF404040;
+    public static final int SMALL_MUL_BACKGROUND = 0xFF606060;
+    public static final int VISITED_FONT = 0xFF400D40;
+    public static final int LINKED_FONT = 0xFF334A66;
+    public static final int NORMAL_FONT = 0xFF525252;
+    public static final int IMAGE_BORDER = 0xFF1E1E2A;
+    public static final int CARET = 0xFF1B438A;
 
-    private Context mContext;
-    private WebView mWebView;
-    private ProgressBar mProgressBar;
-    private boolean mShowLoading = true;
+    public static final float BACKGROUND_HUE = 220f;
+    public static final float BACKGROUND_SATURATION_MIN = 0.05f;
+    public static final float BACKGROUND_SATURATION_MAX = 0.27f;
+    public static final float BACKGROUND_BRIGHTNESS_MIN = 0.08f;
+    public static final float BACKGROUND_BRIGHTNESS_MAX = 0.18f;
+    public static final float BORDER_HUE = 208f;
+    public static final float BORDER_SATURATION_MIN = 0.15f;
+    public static final float BORDER_SATURATION_MAX = 0.60f;
+    public static final float BORDER_BRIGHTNESS_MIN = 0.25f;
+    public static final float BORDER_BRIGHTNESS_MAX = 0.40f;
+}
 
-    private OnErrorListener mOnErrorListener;
-    private OnPageListener mOnPageListener;
+public class WXColorThemeStateNight extends WXColorThemeState {
+    private WXColorThemeStateNight() {}
 
+    private static class Holder {
+        private static WXColorThemeStateNight SINGLETON = new WXColorThemeStateNight();
+    }
 
-    public WXWebView(Context context) {
-        mContext = context;
+    public static final WXColorThemeStateNight getInstance() {
+        return Holder.SINGLETON;
+    }
+
+    public int getColorThemeBackground(int c) {
+        return getColorThemeConvert(c, ThemeColorType.BACKGROUND);
+    }
+
+    public int getColorThemeBigMulBackground(int c) {
+        return NMColor.BIG_MUL_BACKGROUND;
+    }
+
+    public int getColorThemeMediumMulBackground(int c) {
+        return NMColor.MEDIUM_MUL_BACKGROUND;
+    }
+
+    public int getColorThemeSmallMulBackground(int c) {
+        return NMColor.SMALL_MUL_BACKGROUND;
+    }
+
+    public int getColorThemeVisitedFont(int c) {
+        return NMColor.VISITED_FONT;
+    }
+
+    public int getColorThemeLinkedFont(int c) {
+        return NMColor.LINKED_FONT;
+    }
+
+    public int getColorThemeNormalFont(int c) {
+        return NMColor.NORMAL_FONT; 
+    }
+    
+    public int getColorThemeBorder(int c) {
+        return getColorThemeConvert(c, ThemeColorType.BORDER);
     }
 
     @Override
-    public View getView() {
-        FrameLayout root = new FrameLayout(mContext);
-        int bgColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BACKGROUND, Color.WHITE);
-        root.setBackgroundColor(bgColor);
-
-        mWebView = new WebView(mContext);//mContext.getApplicationContext();
-        FrameLayout.LayoutParams wvLayoutParams =
-                new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.MATCH_PARENT);
-        wvLayoutParams.gravity = Gravity.CENTER;
-        mWebView.setLayoutParams(wvLayoutParams);
-        mWebView.setBackgroundColor(bgColor);
-        root.addView(mWebView);
-        initWebView(mWebView);
-
-        mProgressBar = new ProgressBar(mContext);
-        showProgressBar(false);
-        FrameLayout.LayoutParams pLayoutParams =
-                new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT);
-        mProgressBar.setLayoutParams(pLayoutParams);
-        pLayoutParams.gravity = Gravity.CENTER;
-        root.addView(mProgressBar);
-        return root;
+    public int getColorThemeCaret(int c) {
+        return NMColor.CARET;
     }
 
-    @Override
-    public void destroy() {
-        if (getWebView() != null) {
-            getWebView().removeAllViews();
-            getWebView().destroy();
-            mWebView = null;
+    protected int getColorThemeConvert(int c, ThemeColorType type) {
+        float nightHue = 0;
+        float nightSaturationMin = 0;
+        float nightSaturationMax = 0;
+        float nightBrightNessMin = 0;
+        float nightBrightNessMax = 0;
+
+        if (ThemeColorType.BACKGROUND == type) {
+            nightHue = (float) (NMColor.BACKGROUND_HUE / Math.nextAfter(360.0, 0.0));
+            nightSaturationMin = NMColor.BACKGROUND_SATURATION_MIN;
+            nightSaturationMax = NMColor.BACKGROUND_SATURATION_MAX;
+            nightBrightNessMin = NMColor.BACKGROUND_BRIGHTNESS_MIN;
+            nightBrightNessMax = NMColor.BACKGROUND_BRIGHTNESS_MAX;
+        } else if (ThemeColorType.BORDER == type) {
+            nightHue = (float) (NMColor.BORDER_HUE / Math.nextAfter(360.0, 0.0));
+            nightSaturationMin = NMColor.BORDER_SATURATION_MIN;
+            nightSaturationMax = NMColor.BORDER_SATURATION_MAX;
+            nightBrightNessMin = NMColor.BORDER_BRIGHTNESS_MIN;
+            nightBrightNessMax = NMColor.BORDER_BRIGHTNESS_MAX;
+        } else {
+            return c;
         }
+
+        int red = Color.red(c);
+        int green = Color.green(c);
+        int blue = Color.blue(c);
+        float[] hsv = {0, 0, 0};
+
+        Color.RGBToHSV(red, green, blue, hsv);
+
+        // H is fixed for night mode
+        hsv[0] = nightHue;
+        // S remains direct proportion against day mode
+        hsv[1] = nightSaturationMin + hsv[1] * (nightSaturationMax - nightSaturationMin);
+        // L remains inverse proportion against day mode
+        hsv[2] = nightBrightNessMax - hsv[2] * (nightBrightNessMax - nightBrightNessMin);
+        //int alpha = (int) Math.round(((float)Color.alpha(c)) / Math.nextAfter(256.0, 0.0));
+        double alpha = ((float)Color.alpha(c)) / Math.nextAfter(256.0, 0.0);
+
+        //return Color.HSVToColor(alpha, hsv);
+        return makeARGBFromAHSV(alpha, hsv);
     }
 
-    @Override
-    public void loadUrl(String url) {
-        getWebView().loadUrl(url);
-    }
+    /**
+     * Returns a color-int from alpha, hsv components.
+     * Color.HSVToColor() does the same thing, but not functioning properly on API 18.
+     * @param alpha the alpha component
+     * @param hsv the hsv components
+     */ 
+    protected int makeARGBFromAHSV(double alpha, float[] hsv) {
+        // Converts an HSV color value to an RGB color value.
+        double r = 0;
+        double g = 0;
+        double b = 0;
+        int i = (int) Math.floor(hsv[0] * 6.0);
+        double f = hsv[0] * 6.0 - i;
+        double p = hsv[2] * (1 - hsv[1]);
+        double q = hsv[2] * (1 - f * hsv[1]);
+        double t = hsv[2] * (1 - (1 - f) * hsv[1]);
+        double scaleFactor = Math.nextAfter(256.0, 0.0);
 
-    @Override
-    public void reload() {
-        getWebView().reload();
-    }
-
-    @Override
-    public void goBack() {
-        getWebView().goBack();
-    }
-
-    @Override
-    public void goForward() {
-        getWebView().goForward();
-    }
-
-    /*@Override
-    public void setVisibility(int visibility) {
-        if (mRootView != null) {
-            mRootView.setVisibility(visibility);
+        switch (i % 6) {
+            case 0:
+                r = hsv[2];
+                g = t;
+                b = p;
+                break;
+            case 1:
+                r = q;
+                g = hsv[2];
+                b = p;
+                break;
+            case 2:
+                r = p;
+                g = hsv[2];
+                b = t;
+                break;
+            case 3:
+                r = p;
+                g = q;
+                b = hsv[2];
+                break;
+            case 4:
+                r = t;
+                g = p;
+                b = hsv[2];
+                break;
+            case 5:
+                r = hsv[2];
+                g = p;
+                b = q;
+                break;
+            default:
+                break;
         }
-    }*/
 
-    @Override
-    public void setShowLoading(boolean shown) {
-        mShowLoading = shown;
+        return Color.argb((int) (alpha * scaleFactor),
+                (int) (r * scaleFactor),
+                (int) (g * scaleFactor),
+                (int) (b * scaleFactor));
     }
-
-    @Override
-    public void setOnErrorListener(OnErrorListener listener) {
-        mOnErrorListener = listener;
-    }
-
-    @Override
-    public void setOnPageListener(OnPageListener listener) {
-        mOnPageListener = listener;
-    }
-
-    private void showProgressBar(boolean shown) {
-        if (mShowLoading) {
-            mProgressBar.setVisibility(shown ? View.VISIBLE : View.GONE);
-        }
-    }
-
-    private void showWebView(boolean shown) {
-        mWebView.setVisibility(shown ? View.VISIBLE : View.INVISIBLE);
-    }
-
-    private WebView getWebView() {
-        return mWebView;
-    }
-
-    private void initWebView(WebView wv) {
-        WebSettings settings = wv.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setAppCacheEnabled(true);
-        settings.setUseWideViewPort(true);
-        settings.setDomStorageEnabled(true);
-        settings.setSupportZoom(false);
-        settings.setBuiltInZoomControls(false);
-        wv.setWebViewClient(new WebViewClient() {
-
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
-                WXLogUtils.v("tag", "onPageOverride " + url);
-                return true;
-            }
-
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                WXLogUtils.v("tag", "onPageStarted " + url);
-                if (mOnPageListener != null) {
-                    mOnPageListener.onPageStart(url);
-                }
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                WXLogUtils.v("tag", "onPageFinished " + url);
-                if (mOnPageListener != null) {
-                    mOnPageListener.onPageFinish(url, view.canGoBack(), view.canGoForward());
-                }
-            }
-
-            @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                super.onReceivedError(view, request, error);
-                if (mOnErrorListener != null) {
-                    //mOnErrorListener.onError("error", "page error code:" + error.getErrorCode() + ", desc:" + error.getDescription() + ", url:" + request.getUrl());
-                    mOnErrorListener.onError("error", "page error");
-                }
-            }
-
-            @Override
-            public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-                super.onReceivedHttpError(view, request, errorResponse);
-                if (mOnErrorListener != null) {
-                    mOnErrorListener.onError("error", "http error");
-                }
-            }
-
-            @Override
-            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                super.onReceivedSslError(view, handler, error);
-                if (mOnErrorListener != null) {
-                    mOnErrorListener.onError("error", "ssl error");
-                }
-            }
-
-        });
-        wv.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                super.onProgressChanged(view, newProgress);
-                showWebView(newProgress == 100);
-                showProgressBar(newProgress != 100);
-                WXLogUtils.v("tag", "onPageProgressChanged " + newProgress);
-            }
-
-            @Override
-            public void onReceivedTitle(WebView view, String title) {
-                super.onReceivedTitle(view, title);
-                if (mOnPageListener != null) {
-                    mOnPageListener.onReceivedTitle(view.getTitle());
-                }
-            }
-
-        });
-    }
-
 }

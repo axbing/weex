@@ -205,6 +205,7 @@
 package com.taobao.weex.ui.component;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
@@ -247,11 +248,6 @@ public class WXInput extends WXComponent {
     super.initView();
     WXEditText inputView = new WXEditText(mContext);
     mTextAlign = Gravity.LEFT;
-    int colorInt = WXResourceUtils.getColor("#999999");
-    if (colorInt != Integer.MIN_VALUE) {
-      inputView.setHintTextColor(colorInt);
-    }
-
     inputView.setTextSize(TypedValue.COMPLEX_UNIT_PX, WXStyle.getFontSize(mDomObj.style));
     inputView.setSingleLine();//default use single line , same to ios 
     mHost = inputView;

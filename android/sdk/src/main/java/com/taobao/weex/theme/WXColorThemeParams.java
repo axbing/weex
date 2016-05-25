@@ -202,215 +202,501 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.taobao.weex.ui.view;
+package com.taobao.weex.theme;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.net.http.SslError;
-import android.view.Gravity;
-import android.view.View;
-import android.webkit.SslErrorHandler;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
-import android.widget.ProgressBar;
+public class WXColorThemeParams {
+    /*Background color*/
+    private int m_BGB1R;
+    private int m_BGB1G;
+    private int m_BGB1B;
+    private int m_BGB2R;
+    private int m_BGB2G;
+    private int m_BGB2B;
+    private int m_BGB3R;
+    private int m_BGB3G;
+    private int m_BGB3B;
+    private int m_BGB4R;
+    private int m_BGB4G;
+    private int m_BGB4B;
+    /*Font color*/
+    private int m_FC1R;
+    private int m_FC1G;
+    private int m_FC1B;
+    private int m_FC2R;
+    private int m_FC2G;
+    private int m_FC2B;
+    /*Border color*/
+    private int m_BCB1R;
+    private int m_BCB1G;
+    private int m_BCB1B;
+    private int m_BCB2R;
+    private int m_BCB2G;
+    private int m_BCB2B;
+    /*Background color interval*/
+    private float m_BGSSTART;
+    private float m_BGSEND;
+    private float m_BGB11START;
+    private float m_BGB11END;
+    private float m_BGB12START;
+    private float m_BGB12END;
+    private float m_BGB13START;
+    private float m_BGB13END;
+    private float m_BGB14START;
+    private float m_BGB14END;
+    /*Font color interval*/
+    private float m_FCSSTART;
+    private float m_FCSEND;
+    /*Font red color interval eliminated*/
+    private float m_FRHSTART;
+    private float m_FRHEND;
+    private float m_FRSSTART;
+    private float m_FRSEND;
+    private float m_FRBSTART;
+    private float m_FRBEND;
+    /*Font green color interval eliminated*/
+    private float m_FGHSTART;
+    private float m_FGHEND;
+    private float m_FGSSTART;
+    private float m_FGSEND;
+    private float m_FGBSTART;
+    private float m_FGBEND;
+    /*Border color interval*/
+    private float m_BCSSTART;
+    private float m_BCSEND;
+    private float m_BCB1START;
+    private float m_BCB1END;
+    private float m_BCB2START;
+    private float m_BCB2END;
 
-import com.taobao.weex.utils.WXLogUtils;
-import com.taobao.weex.theme.WXThemeManager;
-import com.taobao.weex.theme.WXThemeManager.ThemeColorType;
-
-public class WXWebView implements IWebView {
-
-    private Context mContext;
-    private WebView mWebView;
-    private ProgressBar mProgressBar;
-    private boolean mShowLoading = true;
-
-    private OnErrorListener mOnErrorListener;
-    private OnPageListener mOnPageListener;
-
-
-    public WXWebView(Context context) {
-        mContext = context;
+    public void setBGB1R(int BGB1R) {
+        m_BGB1R = BGB1R;
     }
 
-    @Override
-    public View getView() {
-        FrameLayout root = new FrameLayout(mContext);
-        int bgColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BACKGROUND, Color.WHITE);
-        root.setBackgroundColor(bgColor);
-
-        mWebView = new WebView(mContext);//mContext.getApplicationContext();
-        FrameLayout.LayoutParams wvLayoutParams =
-                new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.MATCH_PARENT);
-        wvLayoutParams.gravity = Gravity.CENTER;
-        mWebView.setLayoutParams(wvLayoutParams);
-        mWebView.setBackgroundColor(bgColor);
-        root.addView(mWebView);
-        initWebView(mWebView);
-
-        mProgressBar = new ProgressBar(mContext);
-        showProgressBar(false);
-        FrameLayout.LayoutParams pLayoutParams =
-                new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT);
-        mProgressBar.setLayoutParams(pLayoutParams);
-        pLayoutParams.gravity = Gravity.CENTER;
-        root.addView(mProgressBar);
-        return root;
+    public int getBGB1R() {
+        return m_BGB1R;
     }
 
-    @Override
-    public void destroy() {
-        if (getWebView() != null) {
-            getWebView().removeAllViews();
-            getWebView().destroy();
-            mWebView = null;
-        }
+    public void setBGB1G(int BGB1G) {
+        m_BGB1G = BGB1G;
     }
 
-    @Override
-    public void loadUrl(String url) {
-        getWebView().loadUrl(url);
+    public int getBGB1G() {
+        return m_BGB1G;
     }
 
-    @Override
-    public void reload() {
-        getWebView().reload();
+    public void setBGB1B(int BGB1B) {
+        m_BGB1B = BGB1B;
     }
 
-    @Override
-    public void goBack() {
-        getWebView().goBack();
+    public int getBGB1B() {
+        return m_BGB1B;
     }
 
-    @Override
-    public void goForward() {
-        getWebView().goForward();
+    public void setBGB2R(int BGB2R) {
+        m_BGB2R = BGB2R;
     }
 
-    /*@Override
-    public void setVisibility(int visibility) {
-        if (mRootView != null) {
-            mRootView.setVisibility(visibility);
-        }
-    }*/
-
-    @Override
-    public void setShowLoading(boolean shown) {
-        mShowLoading = shown;
+    public int getBGB2R() {
+        return m_BGB2R;
     }
 
-    @Override
-    public void setOnErrorListener(OnErrorListener listener) {
-        mOnErrorListener = listener;
+    public void setBGB2G(int BGB2G) {
+        m_BGB2G = BGB2G;
     }
 
-    @Override
-    public void setOnPageListener(OnPageListener listener) {
-        mOnPageListener = listener;
+    public int getBGB2G() {
+        return m_BGB2G;
     }
 
-    private void showProgressBar(boolean shown) {
-        if (mShowLoading) {
-            mProgressBar.setVisibility(shown ? View.VISIBLE : View.GONE);
-        }
+    public void setBGB2B(int BGB2B) {
+        m_BGB2B = BGB2B;
     }
 
-    private void showWebView(boolean shown) {
-        mWebView.setVisibility(shown ? View.VISIBLE : View.INVISIBLE);
+    public int getBGB2B() {
+        return m_BGB2B;
     }
 
-    private WebView getWebView() {
-        return mWebView;
+    public void setBGB3R(int BGB3R) {
+        m_BGB3R = BGB3R;
     }
 
-    private void initWebView(WebView wv) {
-        WebSettings settings = wv.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setAppCacheEnabled(true);
-        settings.setUseWideViewPort(true);
-        settings.setDomStorageEnabled(true);
-        settings.setSupportZoom(false);
-        settings.setBuiltInZoomControls(false);
-        wv.setWebViewClient(new WebViewClient() {
-
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
-                WXLogUtils.v("tag", "onPageOverride " + url);
-                return true;
-            }
-
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                WXLogUtils.v("tag", "onPageStarted " + url);
-                if (mOnPageListener != null) {
-                    mOnPageListener.onPageStart(url);
-                }
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                WXLogUtils.v("tag", "onPageFinished " + url);
-                if (mOnPageListener != null) {
-                    mOnPageListener.onPageFinish(url, view.canGoBack(), view.canGoForward());
-                }
-            }
-
-            @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                super.onReceivedError(view, request, error);
-                if (mOnErrorListener != null) {
-                    //mOnErrorListener.onError("error", "page error code:" + error.getErrorCode() + ", desc:" + error.getDescription() + ", url:" + request.getUrl());
-                    mOnErrorListener.onError("error", "page error");
-                }
-            }
-
-            @Override
-            public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-                super.onReceivedHttpError(view, request, errorResponse);
-                if (mOnErrorListener != null) {
-                    mOnErrorListener.onError("error", "http error");
-                }
-            }
-
-            @Override
-            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                super.onReceivedSslError(view, handler, error);
-                if (mOnErrorListener != null) {
-                    mOnErrorListener.onError("error", "ssl error");
-                }
-            }
-
-        });
-        wv.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                super.onProgressChanged(view, newProgress);
-                showWebView(newProgress == 100);
-                showProgressBar(newProgress != 100);
-                WXLogUtils.v("tag", "onPageProgressChanged " + newProgress);
-            }
-
-            @Override
-            public void onReceivedTitle(WebView view, String title) {
-                super.onReceivedTitle(view, title);
-                if (mOnPageListener != null) {
-                    mOnPageListener.onReceivedTitle(view.getTitle());
-                }
-            }
-
-        });
+    public int getBGB3R() {
+        return m_BGB3R;
     }
 
+    public void setBGB3G(int BGB3G) {
+        m_BGB3G = BGB3G;
+    }
+
+    public int getBGB3G() {
+        return m_BGB3G;
+    }
+
+    public void setBGB3B(int BGB3B) {
+        m_BGB3B = BGB3B;
+    }
+
+    public int getBGB3B() {
+        return m_BGB3B;
+    }
+
+    public void setBGB4R(int BGB4R) {
+        m_BGB4R = BGB4R;
+    }
+
+    public int getBGB4R() {
+        return m_BGB4R;
+    }
+
+    public void setBGB4G(int BGB4G) {
+        m_BGB4G = BGB4G;
+    }
+
+    public int getBGB4G() {
+        return m_BGB4G;
+    }
+
+    public void setBGB4B(int BGB4B) {
+        m_BGB4B = BGB4B;
+    }
+
+    public int getBGB4B() {
+        return m_BGB4B;
+    }
+
+    public void setFC1R(int FC1R) {
+        m_FC1R = FC1R;
+    }
+
+    public int getFC1R() {
+        return m_FC1R;
+    }
+
+    public void setFC1G(int FC1G) {
+        m_FC1G = FC1G;
+    }
+
+    public int getFC1G() {
+        return m_FC1G;
+    }
+
+    public void setFC1B(int FC1B) {
+        m_FC1B = FC1B;
+    }
+
+    public int getFC1B() {
+        return m_FC1B;
+    }
+
+    public void setFC2R(int FC2R) {
+        m_FC2R = FC2R;
+    }
+
+    public int getFC2R() {
+        return m_FC2R;
+    }
+
+    public void setFC2G(int FC2G) {
+        m_FC2G = FC2G;
+    }
+
+    public int getFC2G() {
+        return m_FC2G;
+    }
+
+    public void setFC2B(int FC2B) {
+        m_FC2B = FC2B;
+    }
+
+    public int getFC2B() {
+        return m_FC2B;
+    }
+
+    public void setBCB1R(int BCB1R) {
+        m_BCB1R = BCB1R;
+    }
+
+    public int getBCB1R() {
+        return m_BCB1R;
+    }
+
+    public void setBCB1G(int BCB1G) {
+        m_BCB1G = BCB1G;
+    }
+
+    public int getBCB1G() {
+        return m_BCB1G;
+    }
+
+    public void setBCB1B(int BCB1B) {
+        m_BCB1B = BCB1B;
+    }
+
+    public int getBCB1B() {
+        return m_BCB1B;
+    }
+
+    public void setBCB2R(int BCB2R) {
+        m_BCB2R = BCB2R;
+    }
+
+    public int getBCB2R() {
+        return m_BCB2R;
+    }
+
+    public void setBCB2G(int BCB2G) {
+        m_BCB2G = BCB2G;
+    }
+
+    public int getBCB2G() {
+        return m_BCB2G;
+    }
+
+    public void setBCB2B(int BCB2B) {
+        m_BCB2B = BCB2B;
+    }
+
+    public int getBCB2B() {
+        return m_BCB2B;
+    }
+
+    public void setBGSSTART(float BGSSTART) {
+        m_BGSSTART = BGSSTART;
+    }
+
+    public float getBGSSTART() {
+        return m_BGSSTART;
+    }
+
+    public void setBGSEND(float BGSEND) {
+        m_BGSEND = BGSEND;
+    }
+
+    public float getBGSEND() {
+        return m_BGSEND;
+    }
+
+    public void setBGB11START(float BGB11START) {
+        m_BGB11START = BGB11START;
+    }
+
+    public float getBGB11START() {
+        return m_BGB11START;
+    }
+
+    public void setBGB11END(float BGB11END) {
+        m_BGB11END = BGB11END;
+    }
+
+    public float getBGB11END() {
+        return m_BGB11END;
+    }
+
+    public void setBGB12START(float BGB12START) {
+        m_BGB12START = BGB12START;
+    }
+
+    public float getBGB12START() {
+        return m_BGB12START;
+    }
+
+    public void setBGB12END(float BGB12END) {
+        m_BGB12END = BGB12END;
+    }
+
+    public float getBGB12END() {
+        return m_BGB12END;
+    }
+
+    public void setBGB13START(float BGB13START) {
+        m_BGB13START = BGB13START;
+    }
+
+    public float getBGB13START() {
+        return m_BGB13START;
+    }
+
+    public void setBGB13END(float BGB13END) {
+        m_BGB13END = BGB13END;
+    }
+
+    public float getBGB13END() {
+        return m_BGB13END;
+    }
+
+    public void setBGB14START(float BGB14START) {
+        m_BGB14START = BGB14START;
+    }
+
+    public float getBGB14START() {
+        return m_BGB14START;
+    }
+
+    public void setBGB14END(float BGB14END) {
+        m_BGB14END = BGB14END;
+    }
+
+    public float getBGB14END() {
+        return m_BGB14END;
+    }
+
+    public void setFCSSTART(float FCSSTART) {
+        m_FCSSTART = FCSSTART;
+    }
+
+    public float getFCSSTART() {
+        return m_FCSSTART;
+    }
+
+    public void setFCSEND(float FCSEND) {
+        m_FCSEND = FCSEND;
+    }
+
+    public float getFCSEND() {
+        return m_FCSEND;
+    }
+
+    public void setFRHSTART(float FRHSTART) {
+        m_FRHSTART = FRHSTART;
+    }
+
+    public float getFRHSTART() {
+        return m_FRHSTART;
+    }
+
+    public void setFRHEND(float FRHEND) {
+        m_FRHEND = FRHEND;
+    }
+
+    public float getFRHEND() {
+        return m_FRHEND;
+    }
+
+    public void setFRSSTART(float FRSSTART) {
+        m_FRSSTART = FRSSTART;
+    }
+
+    public float getFRSSTART() {
+        return m_FRSSTART;
+    }
+
+    public void setFRSEND(float FRSEND) {
+        m_FRSEND = FRSEND;
+    }
+
+    public float getFRSEND() {
+        return m_FRSEND;
+    }
+
+    public void setFRBSTART(float FRBSTART) {
+        m_FRBSTART = FRBSTART;
+    }
+
+    public float getFRBSTART() {
+        return m_FRBSTART;
+    }
+
+    public void setFRBEND(float FRBEND) {
+        m_FRBEND = FRBEND;
+    }
+
+    public float getFRBEND() {
+        return m_FRBEND;
+    }
+
+    public void setFGHSTART(float FGHSTART) {
+        m_FGHSTART = FGHSTART;
+    }
+
+    public float getFGHSTART() {
+        return m_FGHSTART;
+    }
+
+    public void setFGHEND(float FGHEND) {
+        m_FGHEND = FGHEND;
+    }
+
+    public float getFGHEND() {
+        return m_FGHEND;
+    }
+
+    public void setFGSSTART(float FGSSTART) {
+        m_FGSSTART = FGSSTART;
+    }
+
+    public float getFGSSTART() {
+        return m_FGSSTART;
+    }
+
+    public void setFGSEND(float FGSEND) {
+        m_FGSEND = FGSEND;
+    }
+
+    public float getFGSEND() {
+        return m_FGSEND;
+    }
+
+    public void setFGBSTART(float FGBSTART) {
+        m_FGBSTART = FGBSTART;
+    }
+
+    public float getFGBSTART() {
+        return m_FGBSTART;
+    }
+
+    public void setFGBEND(float FGBEND) {
+        m_FGBEND = FGBEND;
+    }
+
+    public float getFGBEND() {
+        return m_FGBEND;
+    }
+
+    public void setBCSSTART(float BCSSTART) {
+        m_BCSSTART = BCSSTART;
+    }
+
+    public float getBCSSTART() {
+        return m_BCSSTART;
+    }
+
+    public void setBCSEND(float BCSEND) {
+        m_BCSEND = BCSEND;
+    }
+
+    public float getBCSEND() {
+        return m_BCSEND;
+    }
+
+    public void setBCB1START(float BCB1START) {
+        m_BCB1START = BCB1START;
+    }
+
+    public float getBCB1START() {
+        return m_BCB1START;
+    }
+
+    public void setBCB1END(float BCB1END) {
+        m_BCB1END = BCB1END;
+    }
+
+    public float getBCB1END() {
+        return m_BCB1END;
+    }
+
+    public void setBCB2START(float BCB2START) {
+        m_BCB2START = BCB2START;
+    }
+
+    public float getBCB2START() {
+        return m_BCB2START;
+    }
+
+    public void setBCB2END(float BCB2END) {
+        m_BCB2END = BCB2END;
+    }
+
+    public float getBCB2END() {
+        return m_BCB2END;
+    }
 }

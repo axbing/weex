@@ -24,6 +24,8 @@ import android.mini.support.annotation.Nullable;
 import com.taobao.weex.dom.flex.CSSConstants;
 import com.taobao.weex.dom.flex.FloatUtil;
 import com.taobao.weex.dom.flex.Spacing;
+import com.taobao.weex.theme.WXThemeManager;
+import com.taobao.weex.theme.WXThemeManager.ThemeColorType;
 import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.WXViewUtils;
 
@@ -101,6 +103,7 @@ public class WXBackgroundDrawable extends Drawable {
     updatePath();
     int useColor = WXViewUtils.multiplyColorAlpha(mColor, mAlpha);
     if ((useColor >>> 24) != 0) { // color is not transparent
+      useColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BACKGROUND, useColor);
       mPaint.setColor(useColor);
       mPaint.setStyle(Paint.Style.FILL);
       canvas.drawPath(mPathForBorderRadius, mPaint);
@@ -109,6 +112,7 @@ public class WXBackgroundDrawable extends Drawable {
     float fullBorderWidth = getFullBorderWidth();
     if (fullBorderWidth > 0) {
       int borderColor = getFullBorderColor();
+      borderColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BORDER, borderColor);
       mPaint.setColor(WXViewUtils.multiplyColorAlpha(borderColor, mAlpha));
       mPaint.setStyle(Paint.Style.STROKE);
       mPaint.setStrokeWidth(fullBorderWidth);
@@ -127,6 +131,7 @@ public class WXBackgroundDrawable extends Drawable {
     int useColor = WXViewUtils.multiplyColorAlpha(mColor, mAlpha);
     Rect bounds = getBounds();
     if ((useColor >>> 24) != 0) { // color is not transparent
+      useColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BACKGROUND, useColor);
       mPaint.setColor(useColor);
       mPaint.setStyle(Paint.Style.FILL);
       canvas.drawRect(bounds, mPaint);
@@ -211,7 +216,8 @@ public class WXBackgroundDrawable extends Drawable {
    * @param paint
    */
   private void drawBorder(Canvas canvas,int color,float[] pts,Path path,Paint paint){
-    paint.setColor(color);
+    int bColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BORDER, color);
+    paint.setColor(bColor);
     path.reset();
     path.moveTo(pts[0],pts[1]);
 

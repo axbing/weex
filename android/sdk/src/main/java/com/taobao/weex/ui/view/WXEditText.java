@@ -205,11 +205,15 @@
 package com.taobao.weex.ui.view;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.view.MotionEvent;
 import android.widget.EditText;
 
+import com.taobao.weex.theme.WXThemeManager;
 import com.taobao.weex.ui.view.gesture.WXGesture;
 import com.taobao.weex.ui.view.gesture.WXGestureObservable;
+import com.taobao.weex.utils.WXResourceUtils;
 
 /**
  * Wrapper class for editText
@@ -235,5 +239,17 @@ public class WXEditText extends EditText implements WXGestureObservable {
       result |= wxGesture.onTouch(this, event);
     }
     return result;
+  }
+
+  @Override
+  public void onDraw(Canvas canvas) {
+    int bgColor = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.BACKGROUND, Color.WHITE);
+    setBackgroundColor(bgColor);
+    int colorInt = WXResourceUtils.getColor("#999999");
+    if (colorInt != Integer.MIN_VALUE) {
+      colorInt = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.NORMAL_FONT, colorInt);
+      setHintTextColor(colorInt);
+    }
+    super.onDraw(canvas);
   }
 }

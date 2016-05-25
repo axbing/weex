@@ -220,6 +220,8 @@ import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.WXSDKManager;
 import com.taobao.weex.common.WXRuntimeException;
 import com.taobao.weex.dom.WXDomObject;
+import com.taobao.weex.theme.WXThemeManager;
+import com.taobao.weex.theme.WXThemeManager.ThemeColorType;
 import com.taobao.weex.ui.component.WXComponent;
 import com.taobao.weex.ui.component.WXEventType;
 import com.taobao.weex.ui.component.WXLoading;
@@ -566,7 +568,8 @@ public class WXListComponent extends WXVContainer implements
   @NonNull
   private ListBaseViewHolder createVHForFixedComponent() {
     FrameLayout view = new FrameLayout(mContext);
-    view.setBackgroundColor(Color.WHITE);
+    int bgColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BACKGROUND, Color.WHITE);
+    view.setBackgroundColor(bgColor);
     view.setLayoutParams(new FrameLayout.LayoutParams(0, 0));
     return new ListBaseViewHolder(view);
   }
@@ -581,7 +584,8 @@ public class WXListComponent extends WXVContainer implements
       }
     });
     FrameLayout view = new FrameLayout(mContext);
-    view.setBackgroundColor(Color.TRANSPARENT);
+    int bgColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BACKGROUND, Color.TRANSPARENT);
+    view.setBackgroundColor(bgColor);
     view.setLayoutParams(new FrameLayout.LayoutParams(1, 1));
     return new ListBaseViewHolder(view);
   }
@@ -596,7 +600,8 @@ public class WXListComponent extends WXVContainer implements
       }
     });
     FrameLayout view = new FrameLayout(mContext);
-    view.setBackgroundColor(Color.TRANSPARENT);
+    int bgColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BACKGROUND, Color.TRANSPARENT);
+    view.setBackgroundColor(bgColor);
     view.setLayoutParams(new FrameLayout.LayoutParams(1, 1));
     return new ListBaseViewHolder(view);
   }

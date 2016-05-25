@@ -555,8 +555,11 @@ public class WXStyle extends ConcurrentHashMap<String, Object> {
   /*
    * others
    **/
-  public String getBackgroundColor() {
-    Object temp = get(WXDomPropConstant.WX_BACKGROUNDCOLOR);
+  public static String getBackgroundColor(Map<String, Object> style) {
+    if (style == null) {
+      return "";
+    }
+    Object temp = style.get(WXDomPropConstant.WX_BACKGROUNDCOLOR);
     return temp == null ? "" : temp.toString();
   }
 

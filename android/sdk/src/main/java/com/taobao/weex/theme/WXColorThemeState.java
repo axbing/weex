@@ -202,215 +202,34 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package com.taobao.weex.ui.view;
+package com.taobao.weex.theme;
 
-import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.net.http.SslError;
-import android.view.Gravity;
-import android.view.View;
-import android.webkit.SslErrorHandler;
-import android.webkit.WebChromeClient;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
-import android.widget.ProgressBar;
+public abstract class WXColorThemeState {
+    abstract int getColorThemeBackground(int c);
 
-import com.taobao.weex.utils.WXLogUtils;
-import com.taobao.weex.theme.WXThemeManager;
-import com.taobao.weex.theme.WXThemeManager.ThemeColorType;
+    abstract int getColorThemeBigMulBackground(int c);
 
-public class WXWebView implements IWebView {
+    abstract int getColorThemeMediumMulBackground(int c);
 
-    private Context mContext;
-    private WebView mWebView;
-    private ProgressBar mProgressBar;
-    private boolean mShowLoading = true;
+    abstract int getColorThemeSmallMulBackground(int c);
 
-    private OnErrorListener mOnErrorListener;
-    private OnPageListener mOnPageListener;
+    abstract int getColorThemeVisitedFont(int c);
 
+    abstract int getColorThemeLinkedFont(int c);
 
-    public WXWebView(Context context) {
-        mContext = context;
+    abstract int getColorThemeNormalFont(int c);
+    
+    abstract int getColorThemeBorder(int c);
+
+    int getColorThemePositionedBackground(int c) {
+        return getColorThemeBackground(c);
     }
 
-    @Override
-    public View getView() {
-        FrameLayout root = new FrameLayout(mContext);
-        int bgColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BACKGROUND, Color.WHITE);
-        root.setBackgroundColor(bgColor);
-
-        mWebView = new WebView(mContext);//mContext.getApplicationContext();
-        FrameLayout.LayoutParams wvLayoutParams =
-                new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-                        FrameLayout.LayoutParams.MATCH_PARENT);
-        wvLayoutParams.gravity = Gravity.CENTER;
-        mWebView.setLayoutParams(wvLayoutParams);
-        mWebView.setBackgroundColor(bgColor);
-        root.addView(mWebView);
-        initWebView(mWebView);
-
-        mProgressBar = new ProgressBar(mContext);
-        showProgressBar(false);
-        FrameLayout.LayoutParams pLayoutParams =
-                new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
-                        FrameLayout.LayoutParams.WRAP_CONTENT);
-        mProgressBar.setLayoutParams(pLayoutParams);
-        pLayoutParams.gravity = Gravity.CENTER;
-        root.addView(mProgressBar);
-        return root;
+    int getColorThemeGradientBackground(int c) {
+        return getColorThemeBackground(c);
     }
 
-    @Override
-    public void destroy() {
-        if (getWebView() != null) {
-            getWebView().removeAllViews();
-            getWebView().destroy();
-            mWebView = null;
-        }
+    int getColorThemeCaret(int c) {
+        return c;
     }
-
-    @Override
-    public void loadUrl(String url) {
-        getWebView().loadUrl(url);
-    }
-
-    @Override
-    public void reload() {
-        getWebView().reload();
-    }
-
-    @Override
-    public void goBack() {
-        getWebView().goBack();
-    }
-
-    @Override
-    public void goForward() {
-        getWebView().goForward();
-    }
-
-    /*@Override
-    public void setVisibility(int visibility) {
-        if (mRootView != null) {
-            mRootView.setVisibility(visibility);
-        }
-    }*/
-
-    @Override
-    public void setShowLoading(boolean shown) {
-        mShowLoading = shown;
-    }
-
-    @Override
-    public void setOnErrorListener(OnErrorListener listener) {
-        mOnErrorListener = listener;
-    }
-
-    @Override
-    public void setOnPageListener(OnPageListener listener) {
-        mOnPageListener = listener;
-    }
-
-    private void showProgressBar(boolean shown) {
-        if (mShowLoading) {
-            mProgressBar.setVisibility(shown ? View.VISIBLE : View.GONE);
-        }
-    }
-
-    private void showWebView(boolean shown) {
-        mWebView.setVisibility(shown ? View.VISIBLE : View.INVISIBLE);
-    }
-
-    private WebView getWebView() {
-        return mWebView;
-    }
-
-    private void initWebView(WebView wv) {
-        WebSettings settings = wv.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setAppCacheEnabled(true);
-        settings.setUseWideViewPort(true);
-        settings.setDomStorageEnabled(true);
-        settings.setSupportZoom(false);
-        settings.setBuiltInZoomControls(false);
-        wv.setWebViewClient(new WebViewClient() {
-
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
-                WXLogUtils.v("tag", "onPageOverride " + url);
-                return true;
-            }
-
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                WXLogUtils.v("tag", "onPageStarted " + url);
-                if (mOnPageListener != null) {
-                    mOnPageListener.onPageStart(url);
-                }
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                WXLogUtils.v("tag", "onPageFinished " + url);
-                if (mOnPageListener != null) {
-                    mOnPageListener.onPageFinish(url, view.canGoBack(), view.canGoForward());
-                }
-            }
-
-            @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                super.onReceivedError(view, request, error);
-                if (mOnErrorListener != null) {
-                    //mOnErrorListener.onError("error", "page error code:" + error.getErrorCode() + ", desc:" + error.getDescription() + ", url:" + request.getUrl());
-                    mOnErrorListener.onError("error", "page error");
-                }
-            }
-
-            @Override
-            public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-                super.onReceivedHttpError(view, request, errorResponse);
-                if (mOnErrorListener != null) {
-                    mOnErrorListener.onError("error", "http error");
-                }
-            }
-
-            @Override
-            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                super.onReceivedSslError(view, handler, error);
-                if (mOnErrorListener != null) {
-                    mOnErrorListener.onError("error", "ssl error");
-                }
-            }
-
-        });
-        wv.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                super.onProgressChanged(view, newProgress);
-                showWebView(newProgress == 100);
-                showProgressBar(newProgress != 100);
-                WXLogUtils.v("tag", "onPageProgressChanged " + newProgress);
-            }
-
-            @Override
-            public void onReceivedTitle(WebView view, String title) {
-                super.onReceivedTitle(view, title);
-                if (mOnPageListener != null) {
-                    mOnPageListener.onReceivedTitle(view.getTitle());
-                }
-            }
-
-        });
-    }
-
 }

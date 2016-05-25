@@ -206,11 +206,17 @@ package com.taobao.weex.ui.view;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.graphics.PorterDuff.Mode;
 import android.view.MotionEvent;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnPreDrawListener;
 import android.widget.ImageView;
 
 import com.taobao.weex.dom.WXDomObject;
+import com.taobao.weex.theme.WXThemeManager;
+import com.taobao.weex.theme.WXThemeManager.ThemeColorType;
 import com.taobao.weex.ui.component.IWXUpdateComponent;
 import com.taobao.weex.ui.view.gesture.WXGesture;
 import com.taobao.weex.ui.view.gesture.WXGestureObservable;
@@ -219,10 +225,25 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
 
   private WXShapeFeature mImageShapeFeature;
   private WXGesture wxGesture;
+  private int layoutWidth = 0;
+  private int layoutHeight = 0;
+  private final OnPreDrawListener mPreDrawListener = new OnPreDrawListener() {
+    @Override
+    public boolean onPreDraw() {
+      ViewTreeObserver observer = getViewTreeObserver();
+      if (observer != null) {
+        observer.removeOnPreDrawListener(this);
+      }
+      setImageDrawable(getDrawable());
+      return true;
+    }
+  };
 
   public WXImageView(Context context, WXDomObject element) {
     super(context);
     mImageShapeFeature = new WXShapeFeature(getContext(), this, element);
+    layoutWidth = (int) element.getLayoutWidth();
+    layoutHeight = (int) element.getLayoutHeight();
   }
 
   @Override
@@ -235,16 +256,51 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
     Drawable drawable = getResources().getDrawable(resId);
     drawable = mImageShapeFeature.wrapDrawable(drawable);
     super.setImageDrawable(drawable);
+
+    // Set color filter for night mode.
+    int blendingColor = Color.WHITE;
+    // FIXME: need to check TileMode type to determine the blending color.
+    if (drawable.getIntrinsicWidth() < layoutWidth ||
+            drawable.getIntrinsicHeight() < layoutHeight) {
+        blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.SMALL_MUL_BACKGROUND, blendingColor);
+    } else {
+        if (layoutWidth > 300 || layoutHeight > 300) {
+            blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BIG_MUL_BACKGROUND, blendingColor);
+        } else {
+            blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.MEDIUM_MUL_BACKGROUND, blendingColor);
+        }
+    }
+    setColorFilter(blendingColor, Mode.MULTIPLY);
   }
 
   @Override
   public void setImageDrawable(Drawable drawable) {
     drawable = mImageShapeFeature.wrapDrawable(drawable);
     super.setImageDrawable(drawable);
+
+    // Set color filter for night mode.
+    int blendingColor = Color.WHITE;
+    // FIXME: need to check TileMode type to determine the blending color.
+    if (mImageShapeFeature.getIntrinsicWidth() < layoutWidth ||
+            mImageShapeFeature.getIntrinsicHeight() < layoutHeight) {
+        blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.SMALL_MUL_BACKGROUND, blendingColor);
+    } else {
+        if (layoutWidth > 300 || layoutHeight > 300) {
+            blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BIG_MUL_BACKGROUND, blendingColor);
+        } else {
+            blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.MEDIUM_MUL_BACKGROUND, blendingColor);
+        }
+    }
+    blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.SMALL_MUL_BACKGROUND, blendingColor);
+    setColorFilter(blendingColor, Mode.MULTIPLY);
   }
 
   @Override
   protected void onDraw(Canvas canvas) {
+    ViewTreeObserver observer = getViewTreeObserver();
+    if (observer != null) {
+      observer.addOnPreDrawListener(mPreDrawListener);
+    }
     mImageShapeFeature.beforeOnDraw(canvas);
     super.onDraw(canvas);
     mImageShapeFeature.afterOnDraw(canvas);
@@ -270,6 +326,15 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
     mImageShapeFeature.beforeOnLayout(changed, left, top, right, bottom);
     super.onLayout(changed, left, top, right, bottom);
     mImageShapeFeature.afterOnLayout(changed, left, top, right, bottom);
+  }
+
+  @Override
+  public void setBackgroundColor(int color) {
+    int bgColor = color;
+    if (WXThemeManager.getInstance().isNight()) {
+      bgColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BACKGROUND, color);
+    }
+    super.setBackgroundColor(bgColor);
   }
 
   @Override

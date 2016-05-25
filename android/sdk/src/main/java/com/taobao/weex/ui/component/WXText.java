@@ -204,6 +204,7 @@
  */
 package com.taobao.weex.ui.component;
 
+import android.graphics.Color;
 import android.text.Spannable;
 import android.text.TextUtils;
 import android.text.TextUtils.TruncateAt;
@@ -217,7 +218,10 @@ import com.taobao.weex.common.WXDomPropConstant;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.dom.WXStyle;
 import com.taobao.weex.dom.flex.CSSConstants;
+import com.taobao.weex.theme.WXThemeManager;
+import com.taobao.weex.theme.WXThemeManager.ThemeColorType;
 import com.taobao.weex.ui.view.WXTextView;
+import com.taobao.weex.utils.WXResourceUtils;
 
 /**
  * Text component
@@ -237,7 +241,7 @@ public class WXText extends WXComponent{
 
   @Override
   protected void initView() {
-    mHost = new WXTextView(mContext);
+    mHost = new WXTextView(mContext, mDomObj);
 //    getView().setEllipsize(TruncateAt.END);
     //Remove padding for ascents and descents
     getView().setIncludeFontPadding(false);
@@ -258,8 +262,8 @@ public class WXText extends WXComponent{
     if (spannable == null) {
       return;
     }
-    int fontSize = WXStyle.getFontSize(mDomObj.style);
 
+    int fontSize = WXStyle.getFontSize(mDomObj.style);
     getView().setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize);
 
     mPreExtra = spannable;

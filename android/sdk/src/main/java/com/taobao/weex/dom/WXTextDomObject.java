@@ -361,7 +361,7 @@ public class WXTextDomObject extends WXDomObject {
   private boolean mIsColorSet = false;
   private int mColor = Color.BLACK;
   private boolean mIsBackgroundColorSet = false;
-  private int mBackgroundColor;
+  private int mBackgroundColor = Color.WHITE;
   /**
    * mFontStyle can be {@link Typeface#NORMAL} or {@link Typeface#ITALIC}.
    * mFontWeight can be {@link Typeface#NORMAL} or {@link Typeface#BOLD}.
@@ -510,14 +510,6 @@ public class WXTextDomObject extends WXDomObject {
       if (textCSSNode.mTextDecoration == WXTextDecoration.LINETHROUGH) {
         ops.add(new SetSpanOperation(start, end,
                                      new StrikethroughSpan()));
-      }
-      // We always need set text color, or text color will depend on UI Theme. 
-      // In some cases, it's totally transparent.
-      ops.add(new SetSpanOperation(start, end,
-                                   new ForegroundColorSpan(textCSSNode.mColor)));
-      if (textCSSNode.mIsBackgroundColorSet) {
-        ops.add(new SetSpanOperation(start, end,
-                                     new BackgroundColorSpan(textCSSNode.mBackgroundColor)));
       }
       if (textCSSNode.mFontSize != UNSET) {
         ops.add(new SetSpanOperation(start, end, new AbsoluteSizeSpan(

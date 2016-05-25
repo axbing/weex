@@ -128,6 +128,7 @@
 package com.taobao.weex.ui.component;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.PointF;
 import android.mini.support.annotation.Nullable;
 import android.mini.support.v4.view.ViewPager;

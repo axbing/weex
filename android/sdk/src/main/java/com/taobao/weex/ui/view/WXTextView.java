@@ -205,11 +205,21 @@
 package com.taobao.weex.ui.view;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.view.MotionEvent;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnPreDrawListener;
 import android.widget.TextView;
 
+import com.taobao.weex.dom.WXDomObject;
+import com.taobao.weex.dom.WXStyle;
+import com.taobao.weex.theme.WXThemeManager;
+import com.taobao.weex.ui.component.WXComponent;
+import com.taobao.weex.ui.component.WXText;
 import com.taobao.weex.ui.view.gesture.WXGesture;
 import com.taobao.weex.ui.view.gesture.WXGestureObservable;
+import com.taobao.weex.utils.WXResourceUtils;
 
 /**
  * TextView wrapper
@@ -217,9 +227,39 @@ import com.taobao.weex.ui.view.gesture.WXGestureObservable;
 public class WXTextView extends TextView implements WXGestureObservable {
 
   private WXGesture wxGesture;
+  private WXDomObject mDomObj;
+  private WXComponent mComponent;
+  private final OnPreDrawListener mPreDrawListener = new OnPreDrawListener() {
+    @Override
+    public boolean onPreDraw() {
+      ViewTreeObserver observer = getViewTreeObserver();
+      if (observer != null) {
+        observer.removeOnPreDrawListener(this);
+      }
+      if (mDomObj != null) {
+        String textColorStr = WXStyle.getTextColor(mDomObj.style);
+        int textColor = Color.BLACK;
+        if (textColorStr.length() > 0) {
+          textColor = WXResourceUtils.getColor(textColorStr);
+        }
+        textColor = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.NORMAL_FONT, textColor);
+        setTextColor(textColor);
 
-  public WXTextView(Context context) {
+        String bgColorStr = WXStyle.getBackgroundColor(mDomObj.style);
+        int bgColor = Color.WHITE;
+        if (bgColorStr.length() > 0) {
+          bgColor = WXResourceUtils.getColor(bgColorStr);
+        }
+        bgColor = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.BACKGROUND, bgColor);
+        setBackgroundColor(bgColor);
+      }
+      return true;
+    }
+  };
+
+  public WXTextView(Context context, WXDomObject node) {
     super(context);
+    mDomObj = node;
   }
 
   @Override
@@ -234,5 +274,14 @@ public class WXTextView extends TextView implements WXGestureObservable {
   @Override
   public void registerGestureListener(WXGesture wxGesture) {
     this.wxGesture = wxGesture;
+  }
+
+  @Override
+  protected void onDraw(Canvas canvas) {
+    ViewTreeObserver observer = getViewTreeObserver();
+    if (observer != null) {
+      observer.addOnPreDrawListener(mPreDrawListener);
+    }
+    super.onDraw(canvas);
   }
 }
