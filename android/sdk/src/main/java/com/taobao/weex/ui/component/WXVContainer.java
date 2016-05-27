@@ -290,6 +290,8 @@ public abstract class WXVContainer extends WXComponent {
   @Override
   public void notifyViewRecycled(boolean isRecycled) {
     super.notifyViewRecycled(isRecycled);
+    if (mChildren == null)
+      return;
     for (WXComponent child : mChildren) {
         child.notifyViewRecycled(isRecycled);
       }
