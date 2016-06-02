@@ -252,7 +252,6 @@ public class WXWebView implements IWebView {
                         FrameLayout.LayoutParams.MATCH_PARENT);
         wvLayoutParams.gravity = Gravity.CENTER;
         mWebView.setLayoutParams(wvLayoutParams);
-        mWebView.setBackgroundColor(bgColor);
         root.addView(mWebView);
         initWebView(mWebView);
 

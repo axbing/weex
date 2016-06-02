@@ -246,7 +246,7 @@ public class WXTextView extends TextView implements WXGestureObservable {
         setTextColor(textColor);
 
         String bgColorStr = WXStyle.getBackgroundColor(mDomObj.style);
-        int bgColor = Color.WHITE;
+        int bgColor = Color.TRANSPARENT;
         if (bgColorStr.length() > 0) {
           bgColor = WXResourceUtils.getColor(bgColorStr);
         }
