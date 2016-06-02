@@ -511,14 +511,6 @@ public class WXTextDomObject extends WXDomObject {
         ops.add(new SetSpanOperation(start, end,
                                      new StrikethroughSpan()));
       }
-      // We always need set text color, or text color will depend on UI Theme.
-      // In some cases, it's totally transparent.
-      ops.add(new SetSpanOperation(start, end,
-                                   new ForegroundColorSpan(textCSSNode.mColor)));
-      if (textCSSNode.mIsBackgroundColorSet) {
-        ops.add(new SetSpanOperation(start, end,
-                                     new BackgroundColorSpan(textCSSNode.mBackgroundColor)));
-      }
       if (textCSSNode.mFontSize != UNSET) {
         ops.add(new SetSpanOperation(start, end, new AbsoluteSizeSpan(
             textCSSNode.mFontSize)));

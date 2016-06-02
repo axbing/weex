@@ -208,8 +208,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.view.MotionEvent;
-import android.view.ViewTreeObserver;
-import android.view.ViewTreeObserver.OnPreDrawListener;
 import android.widget.TextView;
 
 import com.taobao.weex.dom.WXDomObject;
@@ -229,33 +227,6 @@ public class WXTextView extends TextView implements WXGestureObservable {
   private WXGesture wxGesture;
   private WXDomObject mDomObj;
   private WXComponent mComponent;
-  private final OnPreDrawListener mPreDrawListener = new OnPreDrawListener() {
-    @Override
-    public boolean onPreDraw() {
-      ViewTreeObserver observer = getViewTreeObserver();
-      if (observer != null) {
-        observer.removeOnPreDrawListener(this);
-      }
-      if (mDomObj != null) {
-        String textColorStr = WXStyle.getTextColor(mDomObj.style);
-        int textColor = Color.BLACK;
-        if (textColorStr.length() > 0) {
-          textColor = WXResourceUtils.getColor(textColorStr);
-        }
-        textColor = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.NORMAL_FONT, textColor);
-        setTextColor(textColor);
-
-        String bgColorStr = WXStyle.getBackgroundColor(mDomObj.style);
-        int bgColor = Color.TRANSPARENT;
-        if (bgColorStr.length() > 0) {
-          bgColor = WXResourceUtils.getColor(bgColorStr);
-        }
-        bgColor = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.BACKGROUND, bgColor);
-        setBackgroundColor(bgColor);
-      }
-      return true;
-    }
-  };
 
   public WXTextView(Context context, WXDomObject node) {
     super(context);
@@ -278,9 +249,22 @@ public class WXTextView extends TextView implements WXGestureObservable {
 
   @Override
   protected void onDraw(Canvas canvas) {
-    ViewTreeObserver observer = getViewTreeObserver();
-    if (observer != null) {
-      observer.addOnPreDrawListener(mPreDrawListener);
+    if (mDomObj != null) {
+      String textColorStr = WXStyle.getTextColor(mDomObj.style);
+      int textColor = Color.BLACK;
+      if (textColorStr.length() > 0) {
+        textColor = WXResourceUtils.getColor(textColorStr);
+      }
+      textColor = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.NORMAL_FONT, textColor);
+      setTextColor(textColor);
+
+      String bgColorStr = WXStyle.getBackgroundColor(mDomObj.style);
+      int bgColor = Color.TRANSPARENT;
+      if (bgColorStr.length() > 0) {
+        bgColor = WXResourceUtils.getColor(bgColorStr);
+      }
+      bgColor = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.BACKGROUND, bgColor);
+      setBackgroundColor(bgColor);
     }
     super.onDraw(canvas);
   }
