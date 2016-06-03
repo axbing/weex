@@ -238,6 +238,7 @@ import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.WXViewUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -248,7 +249,7 @@ import java.util.List;
  * or not even exist.
  */
 public class WXListComponent extends WXVContainer implements
-                                                  IRecyclerAdapterListener<ListBaseViewHolder>, IOnLoadMoreListener {
+        IRecyclerAdapterListener<ListBaseViewHolder>, IOnLoadMoreListener {
 
   private String TAG = "WXListComponent";
   private ArrayList<Integer> indoreCells;
@@ -257,7 +258,8 @@ public class WXListComponent extends WXVContainer implements
   private WXLoading mLoading;
 
   private SparseArray<WXComponent> mAppearComponents = new SparseArray<>();
-
+  private HashMap<String, Long> mTypeList = new HashMap<>();
+  private final long ITEM_TYPE_OFFSET = 10000000;
 
   public WXListComponent(WXSDKInstance instance, WXDomObject node, WXVContainer parent, String instanceId, boolean lazy) {
     super(instance, node, parent, instanceId, lazy);
@@ -375,10 +377,24 @@ public class WXListComponent extends WXVContainer implements
    */
   @Override
   public void onViewRecycled(ListBaseViewHolder holder) {
-    recycleImage(holder.itemView);
-    WXComponent component = getChild(holder.getLayoutPosition());
+    int index = holder.getLayoutPosition();
+    WXComponent component = getChild(index);
+    if (shouldViewBeReused(holder.getItemViewType())) {
+      if (component != null && component.getView() == holder.getView()) {
+        component.detachViewAndClearPreInfo();
+      } else if (index != holder.getAdapterPosition()) {
+        for (WXComponent child : mChildren) {
+          if (child.getRealView() == holder.getView()) {
+            child.detachViewAndClearPreInfo();
+            break;
+          }
+        }
+      }
+    }
     if (component != null)
       component.notifyViewRecycled(true);
+    recycleImage(holder.itemView);
+
     WXLogUtils.d(TAG, "Recycle holder " + holder);
   }
 
@@ -390,13 +406,19 @@ public class WXListComponent extends WXVContainer implements
    */
   @Override
   public void onBindViewHolder(ListBaseViewHolder holder, int position) {
-    WXComponent component=getChild(position);
+    WXComponent component = getChild(position);
     if (indoreCells != null
         && indoreCells.contains(getItemViewType(position))){
       return;
     }
-    if(component != null){
-      component.bind(null);
+
+    if (component != null) {
+      if (shouldViewBeReused(getItemViewType(position))) {
+        component.lazy(false);
+        component.bind(holder.getView());
+      } else {
+        component.bind(null);
+      }
       component.notifyViewRecycled(false);
       component.flushView();
     }
@@ -421,15 +443,25 @@ public class WXListComponent extends WXVContainer implements
       for (int i = 0; i < childCount(); i++) {
         WXComponent component = getChild(i);
         if (component != null && getItemViewType(i) == viewType) {
-          if (component.isLazy()) {
-            component.lazy(false);
-            component.createView(this, -1);
-            return new ListBaseViewHolder(component.getView());
+
+          if (component instanceof WXCell) {
+            if (!shouldViewBeReused(viewType)) {
+              if (component.getView() == null) {
+                component.lazy(false);
+                component.createView(this, -1);
+              }
+              return new ListBaseViewHolder(component.getView());
+            } else if (component.getView() == null) {
+                component.lazy(false);
+                component.createView(this, -1);
+                View view = component.detachViewAndClearPreInfo();
+                return new ListBaseViewHolder(view);
+            }
           } else if (component instanceof WXRefresh) {
             return createVHForWXRefresh(component);
           } else if (component instanceof WXLoading) {
             return createVHForWXLoading(component);
-          } else if (getChild(i).getView() != null) {
+          } else if (component.getView() != null) {
             return new ListBaseViewHolder(component.getView());
           }
         }
@@ -477,6 +509,13 @@ public class WXListComponent extends WXVContainer implements
 
   @Override
   public long getItemId(int position) {
+    String type = mChildren.get(position).getDomObject().attr.getScope();
+    if (!TextUtils.isEmpty(type)) {
+      if (!mTypeList.containsKey(type)) {
+        mTypeList.put(type, position + ITEM_TYPE_OFFSET);
+      }
+      return mTypeList.get(type);
+    }
     long id;
     try {
       id = Long.parseLong(getChild(position).getDomObject().ref);
@@ -615,5 +654,9 @@ public class WXListComponent extends WXVContainer implements
         indoreCells.add(viewType);
       }
     }
+  }
+
+  private boolean shouldViewBeReused(int viewType) {
+    return viewType >= ITEM_TYPE_OFFSET;
   }
 }

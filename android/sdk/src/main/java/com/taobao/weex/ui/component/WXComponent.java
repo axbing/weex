@@ -237,10 +237,12 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
     }
   }
 
+  @SuppressWarnings("deprecation")
   protected void bindImpl(View view) {
     if (view != null) {
       mHost = view;
       getOrCreateBorder().attachView(view);
+      mHost.setBackgroundDrawable(null);
     }
 
     setLayout(mDomObj);
@@ -903,9 +905,7 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
    */
   public View detachViewAndClearPreInfo() {
     View original = mHost;
-    if (mBorder != null) {
-      mBorder.detachView();
-    }
+    mBorder = null;
     mPreRealLeft = 0;
     mPreRealWidth = 0;
     mPreRealHeight = 0;
