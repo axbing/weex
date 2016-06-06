@@ -239,6 +239,13 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
 
   @SuppressWarnings("deprecation")
   protected void bindImpl(View view) {
+    simpleBind(view);
+    updateProperties();
+    addEvents();
+    updateExtra(mDomObj.getExtra());
+  }
+
+  public final void simpleBind(View view) {
     if (view != null) {
       mHost = view;
       getOrCreateBorder().attachView(view);
@@ -247,6 +254,9 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
 
     setLayout(mDomObj);
     setPadding(mDomObj.getPadding(), mDomObj.getBorder());
+  }
+
+  public void laterBind() {
     updateProperties();
     addEvents();
     updateExtra(mDomObj.getExtra());

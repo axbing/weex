@@ -239,6 +239,9 @@ import com.taobao.weex.utils.WXViewUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -260,6 +263,50 @@ public class WXListComponent extends WXVContainer implements
   private SparseArray<WXComponent> mAppearComponents = new SparseArray<>();
   private HashMap<String, Long> mTypeList = new HashMap<>();
   private final long ITEM_TYPE_OFFSET = 10000000;
+
+  private static class BindScheduler implements Runnable {
+      private android.os.Handler handler;
+      private boolean scheduled = false;
+      private HashMap<WXComponent, View> works = new HashMap<>();
+
+      public BindScheduler() {
+          handler = new android.os.Handler();
+      }
+
+      public void scheduleWork(WXComponent component, View view) {
+          works.put(component, view);
+          if (!scheduled) {
+              // do schedule
+              handler.post(this);
+              scheduled = true;
+          }
+      }
+
+      public void recycled(WXComponent component) {
+          works.remove(component);
+      }
+      @Override
+      public void run() {
+          Set<Map.Entry<WXComponent, View> > set = works.entrySet();
+          Iterator<Map.Entry<WXComponent, View> > iterator = set.iterator();
+          while (iterator.hasNext()) {
+            Map.Entry<WXComponent, View> entry = iterator.next();
+            entry.getKey().laterBind();
+            entry.getKey().flushView();
+          }
+          scheduled = false;
+          works.clear();
+      }
+  }
+
+  private BindScheduler getBindScheduler() {
+      if (bindScheduler == null) {
+          bindScheduler = new BindScheduler();
+      }
+      return bindScheduler;
+  }
+
+  private BindScheduler bindScheduler;
 
   public WXListComponent(WXSDKInstance instance, WXDomObject node, WXVContainer parent, String instanceId, boolean lazy) {
     super(instance, node, parent, instanceId, lazy);
@@ -391,8 +438,10 @@ public class WXListComponent extends WXVContainer implements
         }
       }
     }
-    if (component != null)
+    if (component != null) {
       component.notifyViewRecycled(true);
+      getBindScheduler().recycled(component);
+    }
     recycleImage(holder.itemView);
 
     WXLogUtils.d(TAG, "Recycle holder " + holder);
@@ -412,15 +461,16 @@ public class WXListComponent extends WXVContainer implements
       return;
     }
 
+    component.notifyViewRecycled(false);
     if (component != null) {
       if (shouldViewBeReused(getItemViewType(position))) {
         component.lazy(false);
-        component.bind(holder.getView());
+        component.simpleBind(holder.itemView);
+        getBindScheduler().scheduleWork(component, holder.getView());
       } else {
         component.bind(null);
+        component.flushView();
       }
-      component.notifyViewRecycled(false);
-      component.flushView();
     }
     WXLogUtils.d(TAG, "Bind holder "+holder);
   }

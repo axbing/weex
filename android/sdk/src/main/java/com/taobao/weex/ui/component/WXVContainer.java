@@ -238,6 +238,22 @@ public abstract class WXVContainer extends WXComponent {
     }
   }
 
+  @Override
+  public void laterBind() {
+    super.laterBind();
+    View view = mHost;
+    int count = childCount();
+    for (int i = 0; i < count; ++i) {
+      if (view == null) {
+        getChild(i).bindImpl(null);
+      } else {
+        if (view instanceof ViewGroup) {
+          getChild(i).bindImpl(((ViewGroup) view).getChildAt(i));
+        }
+      }
+    }
+  }
+
   /**
    * return real View
    */
