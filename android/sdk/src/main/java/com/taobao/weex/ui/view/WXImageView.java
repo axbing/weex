@@ -270,7 +270,8 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
             blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.MEDIUM_MUL_BACKGROUND, blendingColor);
         }
     }
-    setColorFilter(blendingColor, Mode.MULTIPLY);
+    if (Color.WHITE != blendingColor || WXThemeManager.getInstance().isNightChanged())
+        setColorFilter(blendingColor, Mode.MULTIPLY);
   }
 
   @Override
@@ -291,8 +292,8 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
             blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.MEDIUM_MUL_BACKGROUND, blendingColor);
         }
     }
-    blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.SMALL_MUL_BACKGROUND, blendingColor);
-    setColorFilter(blendingColor, Mode.MULTIPLY);
+    if (Color.WHITE != blendingColor || WXThemeManager.getInstance().isNightChanged())
+        setColorFilter(blendingColor, Mode.MULTIPLY);
   }
 
   @Override

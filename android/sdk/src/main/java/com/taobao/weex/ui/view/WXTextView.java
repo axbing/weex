@@ -225,12 +225,23 @@ import com.taobao.weex.utils.WXResourceUtils;
 public class WXTextView extends TextView implements WXGestureObservable {
 
   private WXGesture wxGesture;
-  private WXDomObject mDomObj;
   private WXComponent mComponent;
+  private int mTextColor = Color.BLACK;
+  private int mBgColor = Color.TRANSPARENT;
 
   public WXTextView(Context context, WXDomObject node) {
     super(context);
-    mDomObj = node;
+    if (node != null) {
+      String textColorStr = WXStyle.getTextColor(node.style);
+      if (textColorStr.length() > 0) {
+        mTextColor = WXResourceUtils.getColor(textColorStr);
+      }
+
+      String bgColorStr = WXStyle.getBackgroundColor(node.style);
+      if (bgColorStr.length() > 0) {
+        mBgColor = WXResourceUtils.getColor(bgColorStr);
+      }
+    }
   }
 
   @Override
@@ -249,23 +260,14 @@ public class WXTextView extends TextView implements WXGestureObservable {
 
   @Override
   protected void onDraw(Canvas canvas) {
-    if (mDomObj != null) {
-      String textColorStr = WXStyle.getTextColor(mDomObj.style);
-      int textColor = Color.BLACK;
-      if (textColorStr.length() > 0) {
-        textColor = WXResourceUtils.getColor(textColorStr);
-      }
-      textColor = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.NORMAL_FONT, textColor);
-      setTextColor(textColor);
+    int textColor = mTextColor;
+    int bgColor = mBgColor;
 
-      String bgColorStr = WXStyle.getBackgroundColor(mDomObj.style);
-      int bgColor = Color.TRANSPARENT;
-      if (bgColorStr.length() > 0) {
-        bgColor = WXResourceUtils.getColor(bgColorStr);
-      }
-      bgColor = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.BACKGROUND, bgColor);
-      setBackgroundColor(bgColor);
-    }
+    textColor = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.NORMAL_FONT, textColor);
+    bgColor = WXThemeManager.getInstance().getThemeColor(WXThemeManager.ThemeColorType.BACKGROUND, bgColor);
+    setTextColor(textColor);
+    setBackgroundColor(bgColor);
+
     super.onDraw(canvas);
   }
 }

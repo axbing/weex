@@ -252,6 +252,7 @@ public class WXThemeManager {
     private int m_themeType = 0;
     private boolean m_isNight = false;
     private boolean m_isTransparent = false;
+    private boolean m_isNightChanged = false;
 
     public enum ThemeColorType {
         BACKGROUND,
@@ -333,6 +334,9 @@ public class WXThemeManager {
     }
 
     public void setNight(boolean isNight) {
+        if (m_isNight != isNight) {
+            m_isNightChanged = true;
+        }
         m_isNight = isNight;
     }
 
@@ -354,6 +358,10 @@ public class WXThemeManager {
 
     public int getThemeType() {
         return m_themeType;
+    }
+
+    public boolean isNightChanged() {
+        return m_isNightChanged;
     }
 
     private void init() {
