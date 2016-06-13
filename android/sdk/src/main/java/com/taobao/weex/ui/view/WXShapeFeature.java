@@ -243,8 +243,6 @@ public class WXShapeFeature {
   private boolean mIsRound = true;
   private volatile boolean mStrokeEnable;
   private float mStrokeWidth;
-  private int mIntrinsicWidth;
-  private int mIntrinsicHeight;
   private Paint mStrokePaint;
   private Path mStrokePath;
   private RectF mRectF;
@@ -333,14 +331,6 @@ public class WXShapeFeature {
     mDom = domObject;
   }
 
-  public int getIntrinsicWidth() {
-      return mIntrinsicWidth;
-  }
-
-  public int getIntrinsicHeight() {
-      return mIntrinsicHeight;
-  }
-
   public Drawable wrapDrawable(Drawable drawable) {
     int width = (int) mDom.getLayoutWidth();
     int height = (int) mDom.getLayoutHeight();
@@ -364,9 +354,7 @@ public class WXShapeFeature {
 
     int vWidth = width;
     int vHeight = height;
-    mIntrinsicWidth = wrapShapeDrawable.getIntrinsicWidth();
-    mIntrinsicHeight = wrapShapeDrawable.getIntrinsicHeight();
-    if (0 >= mIntrinsicHeight && 0 >= mIntrinsicWidth) {
+    if (0 >= wrapShapeDrawable.getIntrinsicHeight() && 0 >= wrapShapeDrawable.getIntrinsicWidth()) {
       if (mIsRound) {
         vWidth = vHeight = Math.min(vWidth, vHeight);
       }
@@ -437,6 +425,11 @@ public class WXShapeFeature {
         float offset = mStrokeWidth * 0.5f;
         mRectF.set(offset, offset, right - left - offset, bottom - top - offset);
         mStrokePath.addRoundRect(mRectF, mCornerRadiusArray, Path.Direction.CCW);
+      }
+      if (mHost instanceof ImageView) {
+        ((ImageView) mHost).setImageDrawable(((ImageView) mHost).getDrawable());
+      } else {
+        mHost.setBackgroundDrawable(mHost.getBackground());
       }
     }
   }

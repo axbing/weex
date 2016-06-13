@@ -269,6 +269,10 @@ public class WXColorThemeStateDay extends WXColorThemeState {
         return c;
     }
 
+    public int getColorThemeCoverColor(int c) {
+        return c;
+    }
+
     public int getColorThemeVisitedFont(int c) {
         int fontColor = getFontColorInternal(c);
         // Keep 50% alpha of visited font color.

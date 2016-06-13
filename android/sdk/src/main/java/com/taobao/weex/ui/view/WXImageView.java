@@ -207,11 +207,12 @@ package com.taobao.weex.ui.view;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.graphics.PorterDuff.Mode;
 import android.view.MotionEvent;
-import android.view.ViewTreeObserver;
-import android.view.ViewTreeObserver.OnPreDrawListener;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.ImageView;
 
 import com.taobao.weex.dom.WXDomObject;
@@ -225,25 +226,10 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
 
   private WXShapeFeature mImageShapeFeature;
   private WXGesture wxGesture;
-  private int layoutWidth = 0;
-  private int layoutHeight = 0;
-  private final OnPreDrawListener mPreDrawListener = new OnPreDrawListener() {
-    @Override
-    public boolean onPreDraw() {
-      ViewTreeObserver observer = getViewTreeObserver();
-      if (observer != null) {
-        observer.removeOnPreDrawListener(this);
-      }
-      setImageDrawable(getDrawable());
-      return true;
-    }
-  };
 
   public WXImageView(Context context, WXDomObject element) {
     super(context);
     mImageShapeFeature = new WXShapeFeature(getContext(), this, element);
-    layoutWidth = (int) element.getLayoutWidth();
-    layoutHeight = (int) element.getLayoutHeight();
   }
 
   @Override
@@ -256,52 +242,34 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
     Drawable drawable = getResources().getDrawable(resId);
     drawable = mImageShapeFeature.wrapDrawable(drawable);
     super.setImageDrawable(drawable);
-
-    // Set color filter for night mode.
-    int blendingColor = Color.WHITE;
-    // FIXME: need to check TileMode type to determine the blending color.
-    if (drawable.getIntrinsicWidth() < layoutWidth ||
-            drawable.getIntrinsicHeight() < layoutHeight) {
-        blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.SMALL_MUL_BACKGROUND, blendingColor);
-    } else {
-        if (layoutWidth > 300 || layoutHeight > 300) {
-            blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BIG_MUL_BACKGROUND, blendingColor);
-        } else {
-            blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.MEDIUM_MUL_BACKGROUND, blendingColor);
-        }
-    }
-    if (Color.WHITE != blendingColor || WXThemeManager.getInstance().isNightChanged())
-        setColorFilter(blendingColor, Mode.MULTIPLY);
   }
 
   @Override
   public void setImageDrawable(Drawable drawable) {
     drawable = mImageShapeFeature.wrapDrawable(drawable);
     super.setImageDrawable(drawable);
+  }
 
-    // Set color filter for night mode.
-    int blendingColor = Color.WHITE;
-    // FIXME: need to check TileMode type to determine the blending color.
-    if (mImageShapeFeature.getIntrinsicWidth() < layoutWidth ||
-            mImageShapeFeature.getIntrinsicHeight() < layoutHeight) {
-        blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.SMALL_MUL_BACKGROUND, blendingColor);
-    } else {
-        if (layoutWidth > 300 || layoutHeight > 300) {
-            blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BIG_MUL_BACKGROUND, blendingColor);
-        } else {
-            blendingColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.MEDIUM_MUL_BACKGROUND, blendingColor);
+  private void setCoverViewColor() {
+    ViewParent parent = getParent();
+    if (parent != null && parent instanceof ViewGroup) {
+      ViewGroup group = (ViewGroup) parent;
+      int imageIndex = group.indexOfChild(this);
+      if (imageIndex + 1 < group.getChildCount()) {
+        View coverChild = group.getChildAt(imageIndex + 1);
+        if (coverChild != null && coverChild instanceof ImageView) {
+          ImageView coverView = (ImageView) coverChild;
+          int coverColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.COVER_COLOR, Color.TRANSPARENT);
+          coverView.setImageDrawable(new ColorDrawable(coverColor));
         }
+      }
     }
-    if (Color.WHITE != blendingColor || WXThemeManager.getInstance().isNightChanged())
-        setColorFilter(blendingColor, Mode.MULTIPLY);
   }
 
   @Override
   protected void onDraw(Canvas canvas) {
-    ViewTreeObserver observer = getViewTreeObserver();
-    if (observer != null) {
-      observer.addOnPreDrawListener(mPreDrawListener);
-    }
+    setCoverViewColor();
+
     mImageShapeFeature.beforeOnDraw(canvas);
     super.onDraw(canvas);
     mImageShapeFeature.afterOnDraw(canvas);

@@ -204,11 +204,15 @@
  */
 package com.taobao.weex.ui.component;
 
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.dom.WXDomObject;
+import com.taobao.weex.ui.view.WXImageView;
 
 import java.util.ArrayList;
 
@@ -337,6 +341,15 @@ public abstract class WXVContainer extends WXComponent {
       getRealView().addView(child);
     } else {
       getRealView().addView(child, index);
+    }
+
+    // Here we add an ImageView to cover the real image, when we set translucent dark gray color
+    // to the cover, we would get the effect of night mode for the real image.
+    // We could get better effect of night mode if we multiply dark gray color to the real image,
+    // but requires more memory and triggers lots of GCs.
+    if (child instanceof WXImageView) {
+      ImageView coverView = new ImageView(mContext);
+      getRealView().addView(coverView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.CENTER_VERTICAL));
     }
   }
 

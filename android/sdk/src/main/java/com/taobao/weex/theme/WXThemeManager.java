@@ -259,6 +259,7 @@ public class WXThemeManager {
         BIG_MUL_BACKGROUND,
         MEDIUM_MUL_BACKGROUND,
         SMALL_MUL_BACKGROUND,
+        COVER_COLOR,
         POSITIONED_BACKGROUND,
         GRADIENT_BACKGROUND,
         VISITED_FONT,
@@ -418,6 +419,9 @@ public class WXThemeManager {
                 break;
             case SMALL_MUL_BACKGROUND:
                 themeColor = theme.getColorThemeSmallMulBackground(c);
+                break;
+            case COVER_COLOR:
+                themeColor = theme.getColorThemeCoverColor(c);
                 break;
             case POSITIONED_BACKGROUND:
                 themeColor = theme.getColorThemePositionedBackground(c);

@@ -216,6 +216,7 @@ class NMColor {
     public static final int BIG_MUL_BACKGROUND = 0xFF202020;
     public static final int MEDIUM_MUL_BACKGROUND = 0xFF404040;
     public static final int SMALL_MUL_BACKGROUND = 0xFF606060;
+    public static final int COVER_COLOR = 0xA0101010;
     public static final int VISITED_FONT = 0xFF400D40;
     public static final int LINKED_FONT = 0xFF334A66;
     public static final int NORMAL_FONT = 0xFF525252;
@@ -259,6 +260,10 @@ public class WXColorThemeStateNight extends WXColorThemeState {
 
     public int getColorThemeSmallMulBackground(int c) {
         return NMColor.SMALL_MUL_BACKGROUND;
+    }
+
+    public int getColorThemeCoverColor(int c) {
+        return NMColor.COVER_COLOR;
     }
 
     public int getColorThemeVisitedFont(int c) {

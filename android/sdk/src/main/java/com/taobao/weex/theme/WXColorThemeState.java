@@ -213,6 +213,8 @@ public abstract class WXColorThemeState {
 
     abstract int getColorThemeSmallMulBackground(int c);
 
+    abstract int getColorThemeCoverColor(int c);
+
     abstract int getColorThemeVisitedFont(int c);
 
     abstract int getColorThemeLinkedFont(int c);
