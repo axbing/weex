@@ -255,11 +255,17 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
     if (parent != null && parent instanceof ViewGroup) {
       ViewGroup group = (ViewGroup) parent;
       int imageIndex = group.indexOfChild(this);
+      if (imageIndex == -1)
+          return;
+
       if (imageIndex + 1 < group.getChildCount()) {
         View coverChild = group.getChildAt(imageIndex + 1);
-        if (coverChild != null && coverChild instanceof ImageView) {
+        if (coverChild != null && coverChild instanceof ImageView
+                && !(coverChild instanceof WXImageView)) {
           ImageView coverView = (ImageView) coverChild;
-          int coverColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.COVER_COLOR, Color.TRANSPARENT);
+          int coverColor = WXThemeManager.getInstance()
+                                         .getThemeColor(ThemeColorType.COVER_COLOR,
+                                                        Color.TRANSPARENT);
           coverView.setImageDrawable(new ColorDrawable(coverColor));
         }
       }
