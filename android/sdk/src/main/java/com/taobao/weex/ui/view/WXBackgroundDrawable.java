@@ -353,7 +353,7 @@ public class WXBackgroundDrawable extends Drawable {
   }  /* Android's elevation implementation requires this to be implemented to know where to draw the shadow. */
   @Override
   public void getOutline(@NonNull Outline outline) {
-    if (android.os.Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
       super.getOutline(outline);
     } else {
       if ((!CSSConstants.isUndefined(mBorderRadius) && mBorderRadius > 0) || mBorderCornerRadii != null) {

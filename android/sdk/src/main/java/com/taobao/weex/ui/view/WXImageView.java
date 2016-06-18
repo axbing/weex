@@ -207,8 +207,12 @@ package com.taobao.weex.ui.view;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.ImageView;
 
 import com.taobao.weex.dom.WXDomObject;
@@ -246,8 +250,32 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
     super.setImageDrawable(drawable);
   }
 
+  private void setCoverViewColor() {
+    ViewParent parent = getParent();
+    if (parent != null && parent instanceof ViewGroup) {
+      ViewGroup group = (ViewGroup) parent;
+      int imageIndex = group.indexOfChild(this);
+      if (imageIndex == -1)
+          return;
+
+      if (imageIndex + 1 < group.getChildCount()) {
+        View coverChild = group.getChildAt(imageIndex + 1);
+        if (coverChild != null && coverChild instanceof ImageView
+                && !(coverChild instanceof WXImageView)) {
+          ImageView coverView = (ImageView) coverChild;
+          int coverColor = WXThemeManager.getInstance()
+                                         .getThemeColor(ThemeColorType.COVER_COLOR,
+                                                        Color.TRANSPARENT);
+          coverView.setImageDrawable(new ColorDrawable(coverColor));
+        }
+      }
+    }
+  }
+
   @Override
   protected void onDraw(Canvas canvas) {
+    setCoverViewColor();
+
     mImageShapeFeature.beforeOnDraw(canvas);
     super.onDraw(canvas);
     mImageShapeFeature.afterOnDraw(canvas);
