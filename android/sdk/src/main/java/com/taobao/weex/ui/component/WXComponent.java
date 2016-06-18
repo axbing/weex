@@ -154,6 +154,7 @@ import com.taobao.weex.dom.flex.Spacing;
 import com.taobao.weex.ui.component.list.WXListComponent;
 import com.taobao.weex.ui.view.WXBackgroundDrawable;
 import com.taobao.weex.ui.view.WXCircleIndicator;
+import com.taobao.weex.ui.view.WXImageViewWrapper;
 import com.taobao.weex.ui.view.gesture.WXGesture;
 import com.taobao.weex.ui.view.gesture.WXGestureObservable;
 import com.taobao.weex.ui.view.gesture.WXGestureType;
@@ -241,7 +242,10 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
   protected void bindImpl(View view) {
     if (view != null) {
       mHost = view;
-      getOrCreateBorder().attachView(view);
+      if (view instanceof WXImageViewWrapper) {
+        mHost = ((WXImageViewWrapper) view).getRealImageView();
+      }
+      getOrCreateBorder().attachView(mHost);
       mHost.setBackgroundDrawable(null);
     }
 

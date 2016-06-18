@@ -221,7 +221,7 @@ import com.taobao.weex.common.WXImageSharpen;
 import com.taobao.weex.common.WXImageStrategy;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.ui.WXRecycleImageManager;
-import com.taobao.weex.ui.view.WXImageView;
+import com.taobao.weex.ui.view.WXImageViewWrapper;
 import com.taobao.weex.utils.WXResourceUtils;
 import com.taobao.weex.utils.WXViewUtils;
 
@@ -246,7 +246,7 @@ WXImage extends WXComponent implements IWXImageLoaderListener {
 
   @Override
   protected void initView() {
-    mHost = new WXImageView(mContext, mDomObj);
+    mHost = new WXImageViewWrapper(mContext, mDomObj).getRealImageView();
     ((ImageView) getView()).setScaleType(ScaleType.FIT_XY);
   }
 

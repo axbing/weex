@@ -207,8 +207,14 @@ package com.taobao.weex.ui.view;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import com.taobao.weex.dom.WXDomObject;
@@ -218,85 +224,50 @@ import com.taobao.weex.ui.component.IWXUpdateComponent;
 import com.taobao.weex.ui.view.gesture.WXGesture;
 import com.taobao.weex.ui.view.gesture.WXGestureObservable;
 
-public class WXImageView extends ImageView implements IWXUpdateComponent, WXGestureObservable {
+public class WXImageViewWrapper extends FrameLayout {
+  private ImageView mRealView;
+  private ImageView mCoverView;
 
-  private WXShapeFeature mImageShapeFeature;
-  private WXGesture wxGesture;
+  public ImageView getRealImageView() {
+    return mRealView;
+  }
 
-  public WXImageView(Context context, WXDomObject element) {
+  public WXImageViewWrapper(Context context, WXDomObject obj) {
     super(context);
-    mImageShapeFeature = new WXShapeFeature(getContext(), this, element);
+    mRealView = new WXImageView(context, obj);
+    mCoverView = new WXCoverImageView(context);
+    addView(mRealView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                                    Gravity.CENTER_VERTICAL));
+    addView(mCoverView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            Gravity.CENTER_VERTICAL));
   }
 
   @Override
-  public void updateDom(WXDomObject domObject) {
-    mImageShapeFeature.updateDom(domObject);
-  }
-
-  @Override
-  public void setImageResource(int resId) {
-    Drawable drawable = getResources().getDrawable(resId);
-    drawable = mImageShapeFeature.wrapDrawable(drawable);
-    super.setImageDrawable(drawable);
-  }
-
-  @Override
-  public void setImageDrawable(Drawable drawable) {
-    drawable = mImageShapeFeature.wrapDrawable(drawable);
-    super.setImageDrawable(drawable);
-  }
-
-  @Override
-  protected void onDraw(Canvas canvas) {
-    mImageShapeFeature.beforeOnDraw(canvas);
-    super.onDraw(canvas);
-    mImageShapeFeature.afterOnDraw(canvas);
-  }
-
-  @Override
-  public void registerGestureListener(WXGesture wxGesture) {
-    this.wxGesture = wxGesture;
-  }
-
-  @Override
-  public boolean onTouchEvent(MotionEvent event) {
-    boolean result = super.onTouchEvent(event);
-    if (wxGesture != null) {
-      result |= wxGesture.onTouch(this, event);
-    }
-    return result;
-  }
-
-  @Override
-  protected void onLayout(boolean changed, int left, int top, int right,
-                          int bottom) {
-    mImageShapeFeature.beforeOnLayout(changed, left, top, right, bottom);
+  protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+    final int count = getChildCount();
     super.onLayout(changed, left, top, right, bottom);
-    mImageShapeFeature.afterOnLayout(changed, left, top, right, bottom);
-  }
 
-  @Override
-  public void setBackgroundColor(int color) {
-    int bgColor = color;
-    if (WXThemeManager.getInstance().isNight()) {
-      bgColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BACKGROUND, color);
+    for (int loop = 0; loop < count; ++loop) {
+      final View child = getChildAt(loop);
+      if (child.getVisibility() != GONE) {
+        if (child instanceof WXImageView) {
+          int l = child.getLeft();
+          int t = child.getTop();
+          int r = child.getRight();
+          int b = child.getBottom();
+
+          if (loop + 1 < count) {
+            final View cover = getChildAt(loop + 1);
+            if (cover instanceof WXCoverImageView && cover.getVisibility() != GONE) {
+              // Place the cover image in the place of the real image view.
+              cover.layout(l, t, r, b);
+              ++loop;
+            }
+          }
+        }
+      }
     }
-    super.setBackgroundColor(bgColor);
-  }
-
-  @Override
-  public void setBackgroundResource(int resid) {
-    Drawable drawable = getResources().getDrawable(resid);
-    drawable = mImageShapeFeature.wrapDrawable(drawable);
-    super.setBackgroundDrawable(drawable);
-  }
-
-  @Override
-  public void setBackgroundDrawable(Drawable d) {
-    Drawable drawable = d;
-    if (mImageShapeFeature != null) {
-      mImageShapeFeature.wrapDrawable(d);
-    }
-    super.setBackgroundDrawable(drawable);
   }
 }

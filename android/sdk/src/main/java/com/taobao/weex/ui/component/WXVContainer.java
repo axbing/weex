@@ -204,19 +204,15 @@
  */
 package com.taobao.weex.ui.component;
 
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
+import android.view.ViewParent;
 
 import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.ui.view.WXImageView;
 
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * All container components must implement this class
@@ -224,8 +220,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class WXVContainer extends WXComponent {
 
   protected ArrayList<WXComponent> mChildren;
-  protected Map<Integer, Integer> mPositionIncrements = new ConcurrentHashMap<Integer, Integer>();
-  protected int mImageViewCount = 0;
 
   public WXVContainer(WXSDKInstance instance, WXDomObject node, WXVContainer parent, String instanceId, boolean lazy) {
     super(instance, node, parent, instanceId, lazy);
@@ -239,12 +233,8 @@ public abstract class WXVContainer extends WXComponent {
       if (view == null) {
         getChild(i).bindImpl(null);
       } else {
-        if (view instanceof ViewGroup) {
-          int increment = 0;
-          if (mPositionIncrements.containsKey(i))
-            increment = mPositionIncrements.get(i);
-          getChild(i).bindImpl(((ViewGroup) view).getChildAt(i + increment));
-        }
+        if (view instanceof ViewGroup)
+          getChild(i).bindImpl(((ViewGroup) view).getChildAt(i));
       }
     }
   }
@@ -328,24 +318,13 @@ public abstract class WXVContainer extends WXComponent {
       mChildren = new ArrayList<>();
     }
     int count = mChildren.size();
-    int pos = 0;
     index = index >= count ? -1 : index;
     if (index == -1) {
       mChildren.add(child);
-      pos = count;
     } else {
       mChildren.add(index, child);
-      pos = index;
     }
     mDomObj.add(child.getDomObject(), index);
-
-    int increment = mImageViewCount;
-    if (child instanceof WXImage) {
-        mImageViewCount++;
-    }
-
-    mPositionIncrements.put(count, increment);
-
   }
 
   protected void addSubView(View child, int index) {
@@ -353,30 +332,18 @@ public abstract class WXVContainer extends WXComponent {
       return;
     }
 
-    int pos = 0;
     int count = getRealView().getChildCount();
     index = index >= count ? -1 : index;
-    pos = index == -1 ? count : index;
-
-    // Cause the parent might have been added cover image children, the index might
-    // become smaller, so need to check the increment to correct the index.
-    int increment = 0;
-    if (mPositionIncrements.containsKey(pos))
-      increment = mPositionIncrements.get(pos);
-    pos += increment;
-    getRealView().addView(child, pos);
-
-    // Here we add an ImageView to cover the real image, when we set translucent dark gray color
-    // to the cover, we would get the effect of night mode for the real image.
-    // We could get better effect of night mode if we multiply dark gray color to the real image,
-    // but requires more memory and triggers lots of GCs.
     if (child instanceof WXImageView) {
-      ImageView coverView = new ImageView(mContext);
-      getRealView().addView(coverView,
-                            pos + 1,
-                            new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                                         ViewGroup.LayoutParams.MATCH_PARENT,
-                                                         Gravity.CENTER_VERTICAL));
+      ViewParent parent = child.getParent();
+      if (parent != null && parent instanceof ViewGroup) {
+        child = (View) parent;
+      }
+    }
+    if (index == -1) {
+      getRealView().addView(child);
+    } else {
+      getRealView().addView(child, index);
     }
   }
 
@@ -385,25 +352,10 @@ public abstract class WXVContainer extends WXComponent {
       return;
     }
 
-    int pos = mChildren.indexOf(child);
-    if (pos == -1)
-      return;
-
     mChildren.remove(child);
     mDomObj.remove(child.mDomObj);
     if (getRealView() != null) {
-      int increment = 0;
-      if (mPositionIncrements.containsKey(pos))
-        increment = mPositionIncrements.get(pos);
-
-      getRealView().removeViewAt(pos + increment);
-      // Don't forget to remove the cover image view.
-      boolean isWXImage = (child instanceof WXImage);
-      if (isWXImage) {
-        getRealView().removeViewAt(pos + increment + 1);
-      }
-
-      correctPositionIncrements(pos, isWXImage);
+      getRealView().removeView(child.getView());
     }
     child.destroy();
   }
@@ -415,24 +367,5 @@ public abstract class WXVContainer extends WXComponent {
       getChild(i).flushView();
     }
     super.flushView();
-  }
-
-  protected void correctPositionIncrements(int pos, boolean isWXImage) {
-    if (!mPositionIncrements.containsKey(pos))
-      return;
-
-    int size = mPositionIncrements.size();
-    mPositionIncrements.remove(pos);
-
-    // Need to regenerate mPositionIncrements.
-    if (isWXImage) {
-      for (int loop = pos + 1; loop < size; ++loop) {
-        int increment = 0;
-        if (mPositionIncrements.containsKey(loop))
-          increment = mPositionIncrements.get(loop);
-        if (increment >= 1)
-          mPositionIncrements.put(loop - 1, increment - 1);
-      }
-    }
   }
 }

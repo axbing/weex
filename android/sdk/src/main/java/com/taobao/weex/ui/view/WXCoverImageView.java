@@ -207,96 +207,31 @@ package com.taobao.weex.ui.view;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.view.MotionEvent;
+import android.graphics.drawable.ColorDrawable;
 import android.widget.ImageView;
 
-import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.theme.WXThemeManager;
 import com.taobao.weex.theme.WXThemeManager.ThemeColorType;
-import com.taobao.weex.ui.component.IWXUpdateComponent;
-import com.taobao.weex.ui.view.gesture.WXGesture;
-import com.taobao.weex.ui.view.gesture.WXGestureObservable;
 
-public class WXImageView extends ImageView implements IWXUpdateComponent, WXGestureObservable {
+/**
+ * For an image view, to get night mode effect, just place another image
+ * view with translucent dark gray color above the image view.
+ */
+public class WXCoverImageView extends ImageView {
 
-  private WXShapeFeature mImageShapeFeature;
-  private WXGesture wxGesture;
-
-  public WXImageView(Context context, WXDomObject element) {
+  public WXCoverImageView(Context context) {
     super(context);
-    mImageShapeFeature = new WXShapeFeature(getContext(), this, element);
+  }
+
+  private void setCoverColor() {
+    int coverColor = WXThemeManager.getInstance().getThemeColor(
+            ThemeColorType.COVER_COLOR, Color.TRANSPARENT);
+    setImageDrawable(new ColorDrawable(coverColor));
   }
 
   @Override
-  public void updateDom(WXDomObject domObject) {
-    mImageShapeFeature.updateDom(domObject);
-  }
-
-  @Override
-  public void setImageResource(int resId) {
-    Drawable drawable = getResources().getDrawable(resId);
-    drawable = mImageShapeFeature.wrapDrawable(drawable);
-    super.setImageDrawable(drawable);
-  }
-
-  @Override
-  public void setImageDrawable(Drawable drawable) {
-    drawable = mImageShapeFeature.wrapDrawable(drawable);
-    super.setImageDrawable(drawable);
-  }
-
-  @Override
-  protected void onDraw(Canvas canvas) {
-    mImageShapeFeature.beforeOnDraw(canvas);
+  public void onDraw(Canvas canvas) {
+    setCoverColor();
     super.onDraw(canvas);
-    mImageShapeFeature.afterOnDraw(canvas);
-  }
-
-  @Override
-  public void registerGestureListener(WXGesture wxGesture) {
-    this.wxGesture = wxGesture;
-  }
-
-  @Override
-  public boolean onTouchEvent(MotionEvent event) {
-    boolean result = super.onTouchEvent(event);
-    if (wxGesture != null) {
-      result |= wxGesture.onTouch(this, event);
-    }
-    return result;
-  }
-
-  @Override
-  protected void onLayout(boolean changed, int left, int top, int right,
-                          int bottom) {
-    mImageShapeFeature.beforeOnLayout(changed, left, top, right, bottom);
-    super.onLayout(changed, left, top, right, bottom);
-    mImageShapeFeature.afterOnLayout(changed, left, top, right, bottom);
-  }
-
-  @Override
-  public void setBackgroundColor(int color) {
-    int bgColor = color;
-    if (WXThemeManager.getInstance().isNight()) {
-      bgColor = WXThemeManager.getInstance().getThemeColor(ThemeColorType.BACKGROUND, color);
-    }
-    super.setBackgroundColor(bgColor);
-  }
-
-  @Override
-  public void setBackgroundResource(int resid) {
-    Drawable drawable = getResources().getDrawable(resid);
-    drawable = mImageShapeFeature.wrapDrawable(drawable);
-    super.setBackgroundDrawable(drawable);
-  }
-
-  @Override
-  public void setBackgroundDrawable(Drawable d) {
-    Drawable drawable = d;
-    if (mImageShapeFeature != null) {
-      mImageShapeFeature.wrapDrawable(d);
-    }
-    super.setBackgroundDrawable(drawable);
   }
 }
