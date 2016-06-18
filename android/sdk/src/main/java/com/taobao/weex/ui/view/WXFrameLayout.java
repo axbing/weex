@@ -206,7 +206,9 @@ package com.taobao.weex.ui.view;
 
 import android.content.Context;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import com.taobao.weex.ui.view.gesture.WXGesture;
 import com.taobao.weex.ui.view.gesture.WXGestureObservable;
@@ -235,5 +237,31 @@ public class WXFrameLayout extends FrameLayout implements WXGestureObservable {
       result |= wxGesture.onTouch(this, event);
     }
     return result;
+  }
+
+  @Override
+  protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+    final int count = getChildCount();
+    super.onLayout(changed, left, top, right, bottom);
+
+    for (int loop = 0; loop < count; ++loop) {
+      final View child = getChildAt(loop);
+      if (child.getVisibility() != GONE) {
+        if (child instanceof WXImageView) {
+          int l = child.getLeft();
+          int t = child.getTop();
+          int r = child.getRight();
+          int b = child.getBottom();
+          if (loop + 1 < count) {
+            final View cover = getChildAt(loop + 1);
+            if (cover instanceof ImageView && cover.getVisibility() != GONE) {
+              // Place the cover image in the place of the real image view.
+              cover.layout(l, t, r, b);
+              ++loop;
+            }
+          }
+        }
+      }
+    }
   }
 }
