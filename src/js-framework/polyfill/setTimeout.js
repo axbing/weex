@@ -1,5 +1,5 @@
 const {
-  setTimeout, setTimeoutNative
+  setTimeout, setTimeoutNative, clearTimeout
 } = global
 
 // fix no setTimeout on Android V8
@@ -17,4 +17,10 @@ if (typeof setTimeout === 'undefined' &&
       delete timeoutMap[id]
     }
   }
+}
+
+if (typeof clearTimeout === 'undefined') {
+  global.clearTimeout = (timeoutId) => {
+    timeoutId && (timeoutMap[timeoutId] = null);
+  };
 }
