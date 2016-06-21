@@ -212,6 +212,7 @@ import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.inputmethod.InputMethodManager;
@@ -224,8 +225,11 @@ import com.taobao.weex.dom.WXStyle;
 import com.taobao.weex.ui.view.WXEditText;
 import com.taobao.weex.utils.WXResourceUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -239,8 +243,16 @@ public class WXInput extends WXComponent {
   private String mType = "text";
   private int mTextAlign = Gravity.LEFT;
 
+  public static final Map<String, List<WXInput>> sAllInputs = new ConcurrentHashMap<>();
+
   public WXInput(WXSDKInstance instance, WXDomObject dom, WXVContainer parent, String instanceId, boolean isLazy) {
     super(instance, dom, parent, instanceId, isLazy);
+    List<WXInput> list = sAllInputs.get(mInstanceId);
+    if (list == null) {
+       list = new ArrayList<WXInput>();
+       sAllInputs.put(mInstanceId, list);
+     }
+    list.add(this);
   }
 
   @Override
@@ -476,5 +488,26 @@ public class WXInput extends WXComponent {
       align = Gravity.RIGHT;
     }
     return align;
+  }
+
+  @Override
+ public void destroy() {
+   super.destroy();
+   List<WXInput> list = sAllInputs.get(mInstanceId);
+   if (list != null) {
+     list.remove(this);
+   }
+ }
+
+ public void dismissKeyboard() {
+   if (mHost == null)
+     return;
+
+    mHost.postDelayed(new Runnable() {
+      @Override
+      public void run() {
+        hideSoftKeyboard();
+      }
+    }, 16);
   }
 }
