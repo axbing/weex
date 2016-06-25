@@ -416,12 +416,14 @@ class WXDomStatement {
     }
   }
 
-  void reCalculatecssStyle() {
+  void reCalculateCssStyle() {
     WXDomObject rootDom = mRegistry.get(WXDomObject.ROOT);
     if (rootDom == null) {
       return;
     }
     transformStyle(rootDom, false);
+    // transformStyle not mark all node dirty, so we do it again.
+    MarkChildrenDirty(rootDom);
   }
 
   /**
@@ -1071,6 +1073,19 @@ class WXDomStatement {
         dom.add2Dom(child, i);
       }
       transformStyle(child, isAdd);
+    }
+  }
+
+  private void MarkChildrenDirty(WXDomObject dom) {
+    if (dom == null) {
+      return;
+    }
+    dom.markDirty();
+    int count = dom.childCount();
+    WXDomObject child;
+    for (int i = 0; i < count; ++i) {
+      child = dom.getChild(i);
+      MarkChildrenDirty(child);
     }
   }
 

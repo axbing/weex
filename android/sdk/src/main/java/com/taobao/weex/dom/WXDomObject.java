@@ -530,4 +530,11 @@ public class WXDomObject extends CSSNode implements Cloneable {
     super.dirty();
   }
 
+  /**
+   * reset node state to dirty;however, we should not call this out of class normally,
+   * now just for forlayout call.
+   */
+  public void markDirty () {
+    super.dirty();
+  }
 }

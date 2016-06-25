@@ -612,7 +612,7 @@ public final class WXDomManager {
         if (statement == null) {
           return;
         }
-        statement.reCalculatecssStyle();
+        statement.reCalculateCssStyle();
         sheduleForceLayout(instanceId);
       }
     });
