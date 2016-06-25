@@ -212,7 +212,9 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Region;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
@@ -277,6 +279,8 @@ public class WXShapeFeature {
         mStrokeEnable = true;
         mStrokeWidth = WXViewUtils.getRealPxByWidth(mStrokeWidth);
         mStrokePaint.setStrokeWidth(mStrokeWidth);
+      } else {
+        mStrokeWidth = 0.0f;
       }
     }
 
@@ -331,7 +335,49 @@ public class WXShapeFeature {
     mDom = domObject;
   }
 
+  private static class ExtractBitmapCanvas extends Canvas {
+    private static ExtractBitmapCanvas sIntance;
+    private Bitmap mDrawed;
+    private ExtractBitmapCanvas(Bitmap bm) {
+      super(bm);
+    }
+    @Override
+    public void drawBitmap(Bitmap bitmap, float left, float top, Paint paint) {
+      mDrawed = bitmap;
+    }
+    @Override
+    public void drawBitmap(Bitmap bitmap, Rect src, RectF dst, Paint paint) {
+      mDrawed = bitmap;
+    }
+    public void drawBitmap(Bitmap bitmap, Rect src, Rect dst, Paint paint) {
+      mDrawed = bitmap;
+    }
+    public void drawBitmap(Bitmap bitmap, Matrix matrix, Paint paint) {
+      mDrawed = bitmap;
+    }
+
+    static public ExtractBitmapCanvas getsIntance() {
+      if(sIntance == null) {
+        Bitmap bm = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_4444);
+        sIntance = new ExtractBitmapCanvas(bm);
+      }
+      return sIntance;
+    }
+
+    static public Bitmap extractBitmapFromDrawable(Drawable drawable) {
+      ExtractBitmapCanvas canvas = getsIntance();
+      canvas.mDrawed = null;
+      drawable.draw(canvas);
+      return canvas.mDrawed;
+    }
+
+  }
+
   public Drawable wrapDrawable(Drawable drawable) {
+    if(drawable == null) {
+      return null;
+    }
+
     int width = (int) mDom.getLayoutWidth();
     int height = (int) mDom.getLayoutHeight();
     if ((0 >= width && 0 >= height) || !hasRadius()) {
@@ -362,33 +408,29 @@ public class WXShapeFeature {
       wrapShapeDrawable.setIntrinsicHeight(vHeight);
     }
 
-    if (drawable instanceof BitmapDrawable) {
-      Bitmap bm = getBitmap(drawable);
-      if (null != bm) {
-        int bmWidth = bm.getWidth();
-        int bmHeight = bm.getHeight();
-        BitmapShader bitmapShader = new BitmapShader(bm, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+    Bitmap bm = ExtractBitmapCanvas.extractBitmapFromDrawable(drawable);
+    if (bm != null) {
+      int bmWidth = bm.getWidth();
+      int bmHeight = bm.getHeight();
+      BitmapShader bitmapShader = new BitmapShader(bm, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
 
-        float scale;
-        float translateX = 0;
-        float translateY = 0;
+      float scale;
+      float translateX = 0;
+      float translateY = 0;
 
-        if (bmWidth * vHeight > bmHeight * vWidth) {
-          scale = vHeight / (float) bmHeight;
-          translateX = (vWidth - bmWidth * scale) * 0.5f;
-        } else {
-          scale = vWidth / (float) bmWidth;
-          translateY = (vHeight - bmHeight * scale) * 0.5f;
-        }
-
-        mMatrix.reset();
-        mMatrix.setScale(scale, scale);
-        mMatrix.postTranslate(translateX + 0.5f, translateY + 0.5f);
-        bitmapShader.setLocalMatrix(mMatrix);
-        wrapShapeDrawable.getPaint().setShader(bitmapShader);
+      if (bmWidth * vHeight > bmHeight * vWidth) {
+        scale = vHeight / (float) bmHeight;
+        translateX = (vWidth - bmWidth * scale) * 0.5f;
       } else {
-        wrapShapeDrawable.getPaint().setShader(null);
+        scale = vWidth / (float) bmWidth;
+        translateY = (vHeight - bmHeight * scale) * 0.5f;
       }
+
+      mMatrix.reset();
+      mMatrix.setScale(scale, scale);
+      mMatrix.postTranslate(translateX + 0.5f, translateY + 0.5f);
+      bitmapShader.setLocalMatrix(mMatrix);
+      wrapShapeDrawable.getPaint().setShader(bitmapShader);
     } else if (drawable instanceof ColorDrawable) {
       wrapShapeDrawable.getPaint().setShader(null);
       wrapShapeDrawable.getPaint().setColor(((ColorDrawable) drawable).getColor());
@@ -402,14 +444,6 @@ public class WXShapeFeature {
   private boolean hasRadius() {
     return mHasRadius || mIsRound;
   }
-
-  private Bitmap getBitmap(Drawable drawable) {
-    if (drawable instanceof BitmapDrawable) {
-      return ((BitmapDrawable) drawable).getBitmap();
-    }
-    return null;
-  }
-
 
   public void beforeOnLayout(boolean changed, int left, int top, int right, int bottom) {
   }
