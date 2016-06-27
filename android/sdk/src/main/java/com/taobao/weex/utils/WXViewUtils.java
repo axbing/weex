@@ -204,6 +204,8 @@
  */
 package com.taobao.weex.utils;
 
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 
@@ -230,6 +232,7 @@ public class WXViewUtils {
    */
   public static final int OPAQUE = -1;
   private static final boolean mUseWebPx = false;
+  public static boolean mUseDP = false;
 
   public static int getWeexHeight(String instanceId) {
     WXSDKInstance instance = WXSDKManager.getInstance().getSDKInstance(instanceId);
@@ -278,7 +281,9 @@ public class WXViewUtils {
     if (Float.isNaN(pxValue)) {
       return pxValue;
     }
-    if (mUseWebPx) {
+    if (mUseDP) {
+      return toPixelFromDIP(pxValue);
+    } else if (mUseWebPx) {
       return (float) Math.rint(pxValue);
     } else {
       float realPx = (pxValue * getScreenWidth() / WXEnvironment.sDeafultWidth);
@@ -287,7 +292,10 @@ public class WXViewUtils {
   }
 
   public static int getRealPxByWidth2(float pxValue) {
-    if (mUseWebPx) {
+    if (mUseDP) {
+      float realPx = toPixelFromDIP(pxValue);
+      return realPx > 0.005 && realPx < 1 ? 1 : (int) realPx - 1;
+    } else if (mUseWebPx) {
       return (int) pxValue;
     } else {
       float realPx = (pxValue * getScreenWidth() / WXEnvironment.sDeafultWidth);
@@ -295,6 +303,14 @@ public class WXViewUtils {
     }
   }
 
+  public static float toPixelFromDIP(float value) {
+    return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value, WXEnvironment.getApplication().getResources().getDisplayMetrics());
+  }
+  
+  public static float toDIPFromPixel(float value) {
+    return value / WXEnvironment.getApplication().getResources().getDisplayMetrics().density;
+  }
+  
   /**
    * Convert distance from native to JS,CSS. As the JS considers the width of the screen is 750px.
    * There must be a transform when return distance to JS,CSS.
@@ -307,7 +323,9 @@ public class WXViewUtils {
     if (pxValue < -1.9999 && pxValue > -2.005) {
       return Float.NaN;
     }
-    if (mUseWebPx) {
+    if (mUseDP) {
+        return toDIPFromPixel(pxValue);
+    } else if (mUseWebPx) {
       return pxValue;
     } else {
       float realPx = (pxValue * WXEnvironment.sDeafultWidth / getScreenWidth());
