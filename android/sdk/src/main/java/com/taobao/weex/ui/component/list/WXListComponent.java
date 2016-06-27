@@ -468,6 +468,21 @@ public class WXListComponent extends WXVContainer implements
       }
       WXLogUtils.e(TAG, "Cannot find request viewType: " + viewType);
     }
+    // this path is just for exception, not normal path
+    if (mChildren != null) {
+      for (int i = 0; i < childCount(); i++) {
+        WXComponent component = getChild(i);
+        if (component != null && getItemViewType(i) == viewType) {
+            View view = component.detachViewAndClearPreInfo();
+            component.lazy(false);
+            component.createView(this, -1);
+            View newCreatedView = component.getView();
+            component.bind(view);
+            return new ListBaseViewHolder(newCreatedView);
+        }
+      }
+    }
+
     throw new WXRuntimeException("mChildren is null");
   }
 
