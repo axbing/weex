@@ -368,7 +368,9 @@ public class WXShapeFeature {
       ExtractBitmapCanvas canvas = getsIntance();
       canvas.mDrawed = null;
       drawable.draw(canvas);
-      return canvas.mDrawed;
+      Bitmap ret = canvas.mDrawed;
+      canvas.mDrawed = null;
+      return ret;
     }
 
   }
