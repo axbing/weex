@@ -335,46 +335,6 @@ public class WXShapeFeature {
     mDom = domObject;
   }
 
-  private static class ExtractBitmapCanvas extends Canvas {
-    private static ExtractBitmapCanvas sIntance;
-    private Bitmap mDrawed;
-    private ExtractBitmapCanvas(Bitmap bm) {
-      super(bm);
-    }
-    @Override
-    public void drawBitmap(Bitmap bitmap, float left, float top, Paint paint) {
-      mDrawed = bitmap;
-    }
-    @Override
-    public void drawBitmap(Bitmap bitmap, Rect src, RectF dst, Paint paint) {
-      mDrawed = bitmap;
-    }
-    public void drawBitmap(Bitmap bitmap, Rect src, Rect dst, Paint paint) {
-      mDrawed = bitmap;
-    }
-    public void drawBitmap(Bitmap bitmap, Matrix matrix, Paint paint) {
-      mDrawed = bitmap;
-    }
-
-    static public ExtractBitmapCanvas getsIntance() {
-      if(sIntance == null) {
-        Bitmap bm = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_4444);
-        sIntance = new ExtractBitmapCanvas(bm);
-      }
-      return sIntance;
-    }
-
-    static public Bitmap extractBitmapFromDrawable(Drawable drawable) {
-      ExtractBitmapCanvas canvas = getsIntance();
-      canvas.mDrawed = null;
-      drawable.draw(canvas);
-      Bitmap ret = canvas.mDrawed;
-      canvas.mDrawed = null;
-      return ret;
-    }
-
-  }
-
   public Drawable wrapDrawable(Drawable drawable) {
     if(drawable == null) {
       return null;

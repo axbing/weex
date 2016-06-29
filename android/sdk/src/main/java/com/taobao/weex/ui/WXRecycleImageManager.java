@@ -204,18 +204,22 @@
  */
 package com.taobao.weex.ui;
 
+import android.graphics.Bitmap;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.taobao.weex.WXEnvironment;
 import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.common.WXImageSharpen;
 import com.taobao.weex.common.WXImageStrategy;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.ui.component.WXComponent;
 import com.taobao.weex.ui.component.WXImage;
+import com.taobao.weex.ui.view.ExtractBitmapCanvas;
 import com.taobao.weex.utils.WXLogUtils;
 import com.taobao.weex.utils.WXViewUtils;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -247,22 +251,79 @@ public class WXRecycleImageManager {
     mInstance = instance;
   }
 
-  public List<ImageInfo> getAllImages() {
-    return mAllImages;
+  //public List<ImageInfo> getAllImages() {
+  //  return mAllImages;
+  //}
+
+  private void stat() {
+    int count = mAllImages.size();
+    ImageInfo imageInfo;
+    WXComponent component;
+
+    int nullViewCount = 0;
+    int inScreen = 0;
+    int haveBitmap = 0;
+    int bitmapBytes = 0;
+
+    ImageView view;
+    String src;
+    int screenH = WXViewUtils.getScreenHeight();
+    for (int i = 0; i < count; i++) {
+      imageInfo = mAllImages.get(i);
+      component = imageInfo.image.get();
+      if (component == null || component.getDomObject() == null || component.getDomObject().attr == null) {
+        continue;
+      }
+      view = (ImageView)component.getView();
+      if (view == null) {
+        nullViewCount++;
+        continue;
+      }
+      view.getLocationOnScreen(mImgPos);
+      boolean in = (((mImgPos[1] > VISIBLE_TOP_SPACE) && (mImgPos[1] - screenH < VISIBLE_BOTTOM_SPACE))
+              || (view.getHeight() + mImgPos[1] > 0 && mImgPos[1] <= 0));
+      if(in) {
+        inScreen++;
+      }
+      if (view.getDrawable() != null) {
+        Bitmap bm = ExtractBitmapCanvas.extractBitmapFromDrawable(view.getDrawable());
+        if (bm != null) {
+          haveBitmap++;
+          bitmapBytes += bm.getHeight() * bm.getRowBytes();
+        }
+      }
+    }
+    WXLogUtils.e("WXRecycleImageManager", "total=" + count + ", null=" + nullViewCount + ", inScreen=" + inScreen + ", haveBitmap=" + haveBitmap + ", bitmapBytes=" + bitmapBytes);
   }
 
   public boolean addImage(WXComponent view) {
     if(!IfRecycleImage){
       return false;
     }
-    if (mAllImages != null && !mAllImages.contains(view) && mInstance != null) {
+    ImageInfo first_empty = null;
+    int count = mAllImages.size();
+    for (int i = 0; i < count; i++) {
+      ImageInfo imageInfo = mAllImages.get(i);
+      if (imageInfo.image.get() == null) {
+        if(first_empty == null)
+          first_empty = imageInfo;
+      } else if(imageInfo.image.get() == view) {
+        return true;
+      }
+    }
+    if(first_empty == null) {
       ImageInfo imageInfo = new ImageInfo();
-      imageInfo.image = view;
+      imageInfo.image = new WeakReference<WXComponent>(view);
       imageInfo.isRecycle = true;
       mAllImages.add(imageInfo);
-      return true;
+    } else {
+      first_empty.image = new WeakReference<WXComponent>(view);
+      first_empty.isRecycle = true;
     }
-    return false;
+    if(WXEnvironment.isApkDebugable()) {
+      stat();
+    }
+    return true;
   }
 
   public void loadImage() {
@@ -278,7 +339,7 @@ public class WXRecycleImageManager {
     int screenH = WXViewUtils.getScreenHeight();
     for (int i = 0; i < count; i++) {
       imageInfo = mAllImages.get(i);
-      component = imageInfo.image;
+      component = imageInfo.image.get();
       if (component == null || component.getDomObject() == null || component.getDomObject().attr == null) {
         continue;
       }
@@ -328,6 +389,28 @@ public class WXRecycleImageManager {
       WXLogUtils.e("[WXRecycleImageManager] setImage error: " + WXLogUtils.getStackTrace(e));
     }
   }
+  
+  public void hideAllImages() {
+    ImageInfo imageInfo;
+    WXComponent component;
+    int count = mAllImages.size();
+
+    View view;
+    String src;
+    int screenH = WXViewUtils.getScreenHeight();
+    for (int i = 0; i < count; i++) {
+      imageInfo = mAllImages.get(i);
+      component = imageInfo.image.get();
+      if (component == null || component.getDomObject() == null || component.getDomObject().attr == null) {
+        continue;
+      }
+      if(component.getView() != null) {
+        imageInfo.isRecycle = true;
+        setImage(null, component, false);
+      }
+    }
+  }
+
 
   public void destroy() {
     if (mAllImages != null) {
@@ -339,7 +422,7 @@ public class WXRecycleImageManager {
 
   public static class ImageInfo {
 
-    public WXComponent image;
+    public WeakReference<WXComponent> image;
     public boolean isRecycle;
   }
 }
