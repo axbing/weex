@@ -266,7 +266,9 @@ public abstract class WXVContainer extends WXComponent {
       getChild(i).createViewImpl(this, i);
     }
 
-    getView().setClipToPadding(false);
+    if(getView()!=null) {
+      getView().setClipToPadding(false);
+    }
   }
 
   @Override
@@ -391,7 +393,11 @@ public abstract class WXVContainer extends WXComponent {
 
     mChildren.remove(child);
     mDomObj.remove(child.mDomObj);
-    if (getRealView() != null) {
+    if (child.mDomObj.isFixed()) {
+      if (mInstance != null && mInstance.getRootView() != null) {
+        mInstance.getRootView().removeView(child.getView());
+      }
+    } else if (getRealView() != null) {
       int increment = 0;
       if (mPositionIncrements.containsKey(pos))
         increment = mPositionIncrements.get(pos);
@@ -400,7 +406,7 @@ public abstract class WXVContainer extends WXComponent {
       // Don't forget to remove the cover image view.
       boolean isWXImage = (child instanceof WXImage);
       if (isWXImage) {
-        getRealView().removeViewAt(pos + increment + 1);
+        getRealView().removeViewAt(pos + increment);
       }
 
       correctPositionIncrements(pos, isWXImage);
