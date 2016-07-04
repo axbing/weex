@@ -353,6 +353,19 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
     mPreRealHeight = realHeight;
     mPreRealLeft = realLeft;
     mPreRealTop = realTop;
+    //FIXME batch invoke
+    fireOnLayout();
+  }
+
+  public void fireOnLayout() {
+    if (mDomObj.containsEvent(WXEventType.LAYOUT)) {
+      Map<String, Object> params = new HashMap<>(2);
+      params.put("x", WXViewUtils.toDIPFromPixel(mPreRealLeft));
+      params.put("y", WXViewUtils.toDIPFromPixel(mPreRealTop));
+      params.put("w", WXViewUtils.toDIPFromPixel(mPreRealWidth));
+      params.put("h", WXViewUtils.toDIPFromPixel(mPreRealHeight));
+      WXSDKManager.getInstance().fireEvent(mInstanceId, mDomObj.ref, WXEventType.LAYOUT, params);
+    }
   }
 
   public void setPadding(Spacing padding, Spacing border) {

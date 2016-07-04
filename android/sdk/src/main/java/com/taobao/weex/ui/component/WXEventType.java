@@ -228,4 +228,5 @@ public class WXEventType {
   public static final String RECYCLERVIEW_ONLOADING = "loading";
 
   public static final String CHANGE = "change";
+  public static final String LAYOUT = "layout";
 }
