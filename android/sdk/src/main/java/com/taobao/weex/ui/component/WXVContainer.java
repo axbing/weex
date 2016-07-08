@@ -315,6 +315,8 @@ public abstract class WXVContainer extends WXComponent {
   }
 
   public WXComponent getChild(int index) {
+    if (index >= mChildren.size())
+        return null;
     return mChildren.get(index);
   }
 
@@ -401,8 +403,8 @@ public abstract class WXVContainer extends WXComponent {
       int increment = 0;
       if (mPositionIncrements.containsKey(pos))
         increment = mPositionIncrements.get(pos);
-
-      getRealView().removeViewAt(pos + increment);
+      if (getRealView().getChildAt(pos + increment) !=null)
+          getRealView().removeViewAt(pos + increment);
       // Don't forget to remove the cover image view.
       boolean isWXImage = (child instanceof WXImage);
       if (isWXImage) {
