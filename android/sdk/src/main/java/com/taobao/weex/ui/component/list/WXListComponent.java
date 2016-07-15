@@ -218,6 +218,7 @@ import android.widget.ImageView;
 import com.taobao.weex.WXEnvironment;
 import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.WXSDKManager;
+import com.taobao.weex.common.WXDomPropConstant;
 import com.taobao.weex.common.WXRuntimeException;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.theme.WXThemeManager;
@@ -278,7 +279,12 @@ public class WXListComponent extends WXVContainer implements
   protected MeasureOutput measure(int width, int height) {
     int screenH = WXViewUtils.getScreenHeight();
     int weexH = WXViewUtils.getWeexHeight(mInstanceId);
-    int outHeight = height > (weexH >= screenH ? screenH : weexH) ? weexH - mAbsoluteY : height;
+    String overFlowStyle = (String)getDomObject().style.get(WXDomPropConstant.WX_OVERFLOW);
+    Boolean overflowSroll = false;
+    if (overFlowStyle != null && overFlowStyle.contains("scroll"))
+      overflowSroll = true;
+    int outHeight = height > (weexH >= screenH ? screenH : weexH) ?
+            (overflowSroll ? FrameLayout.LayoutParams.MATCH_PARENT : weexH - mAbsoluteY) : height;
     return super.measure(width, outHeight);
   }
 
@@ -608,7 +614,7 @@ public class WXListComponent extends WXVContainer implements
   }
 
   private void recycleImage(View view){
-    if(view instanceof ImageView){
+    if(view instanceof ImageView) {
       mInstance.getImgLoaderAdapter().setImage(null, (ImageView)view, null,
                                                null, null);
     }
