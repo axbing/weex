@@ -332,6 +332,6 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
   @Override
   protected void onDetachedFromWindow() {
     super.onDetachedFromWindow();
-    WXSDKEngine.getIWXImgLoaderAdapter().setImage(null, this, null, null, null);
+//    WXSDKEngine.getIWXImgLoaderAdapter().setImage(null, this, null, null, null);
   }
 }
