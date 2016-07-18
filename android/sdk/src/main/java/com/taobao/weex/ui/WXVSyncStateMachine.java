@@ -282,9 +282,11 @@ public class WXVSyncStateMachine {
                 intime = false;
             }
             callback.layouted(intime);
-        } else {
-            throw new IllegalStateException("frameDisplaying state invalid, state: " + state.get());
         }
+        //  see batch(), mWXRenderManager.layouted(mInstanceId);when instance.batch() implement,else can be used agian
+//          else {
+//            throw new IllegalStateException("frameDisplaying state invalid, state: " + state.get());
+//        }
     }
 
     public void domCommandQueueUpdated() {
