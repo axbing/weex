@@ -357,6 +357,8 @@ class WXDomStatement {
   void batch() {
 
     if (!mDirty || mDestroy) {
+      // fix for statemachine endless stop.
+      mWXRenderManager.layouted(mInstanceId);
       return;
     }
 
