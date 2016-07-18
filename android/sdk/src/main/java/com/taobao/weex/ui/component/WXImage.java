@@ -246,7 +246,7 @@ WXImage extends WXComponent implements IWXImageLoaderListener {
 
   @Override
   protected void initView() {
-    mHost = new WXImageView(mContext, mDomObj);
+    mHost = new WXImageView(mContext, mDomObj, mInstance);
     ((ImageView) getView()).setScaleType(ScaleType.FIT_XY);
   }
 
@@ -348,11 +348,15 @@ WXImage extends WXComponent implements IWXImageLoaderListener {
     WXImageSharpen imageSharpen = mDomObj.attr.getImageSharpen();
     imageStrategy.isSharpen = imageSharpen == WXImageSharpen.SHARPEN;
 
-    IWXImgLoaderAdapter imgLoaderAdapter = mInstance.getImgLoaderAdapter();
-    if (imgLoaderAdapter != null) {
-      imgLoaderAdapter.setImage(src, imageView,
+//    IWXImgLoaderAdapter imgLoaderAdapter = mInstance.getImgLoaderAdapter();
+//    if (imgLoaderAdapter != null) {
+//      imgLoaderAdapter.setImage(src, imageView,
+//                                mDomObj.attr.getImageQuality(), imageStrategy, this);
+//    }
+    if (mInstance.getRecycleImageManager() != null)
+      mInstance.getRecycleImageManager().setImage(src, imageView,
                                 mDomObj.attr.getImageQuality(), imageStrategy, this);
-    }
+
   }
 
   @WXComponentProp(name = WXDomPropConstant.WX_RESIZE_MODE)
@@ -403,5 +407,7 @@ WXImage extends WXComponent implements IWXImageLoaderListener {
         && (mDomObj.style != null && !mDomObj.style.isSticky())) {
       recycleImageManager.addImage(this);
     }
+    if (recycleImageManager != null)
+      recycleImageManager.addImageInMapIfNeed(this);
   }
 }

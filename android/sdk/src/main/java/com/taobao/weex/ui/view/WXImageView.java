@@ -216,6 +216,7 @@ import android.view.ViewParent;
 import android.widget.ImageView;
 
 import com.taobao.weex.WXSDKEngine;
+import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.theme.WXThemeManager;
 import com.taobao.weex.theme.WXThemeManager.ThemeColorType;
@@ -228,10 +229,13 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
 
   private WXShapeFeature mImageShapeFeature;
   private WXGesture wxGesture;
+  private WXSDKInstance mInstance;
 
-  public WXImageView(Context context, WXDomObject element) {
+
+  public WXImageView(Context context, WXDomObject element, WXSDKInstance instance) {
     super(context);
     mImageShapeFeature = new WXShapeFeature(getContext(), this, element);
+    mInstance = instance;
   }
 
   @Override
@@ -332,6 +336,16 @@ public class WXImageView extends ImageView implements IWXUpdateComponent, WXGest
   @Override
   protected void onDetachedFromWindow() {
     super.onDetachedFromWindow();
-//    WXSDKEngine.getIWXImgLoaderAdapter().setImage(null, this, null, null, null);
+    if (mInstance.getRecycleImageManager() != null)
+      mInstance.getRecycleImageManager().onDetachedFromWindow(this);
+  }
+
+  @Override
+  protected void onAttachedToWindow() {
+    super.onAttachedToWindow();
+    if (mInstance.getRecycleImageManager() != null)
+      mInstance.getRecycleImageManager().onAttachedToWindow(this);
+    else
+      setImageBitmap(null);
   }
 }

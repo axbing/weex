@@ -208,11 +208,13 @@ import android.graphics.Bitmap;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.taobao.weex.IWXImageLoaderListener;
 import com.taobao.weex.WXEnvironment;
 import com.taobao.weex.WXSDKInstance;
 import com.taobao.weex.common.WXImageSharpen;
 import com.taobao.weex.common.WXImageStrategy;
 import com.taobao.weex.dom.WXDomObject;
+import com.taobao.weex.dom.WXImageQuality;
 import com.taobao.weex.ui.component.WXComponent;
 import com.taobao.weex.ui.component.WXImage;
 import com.taobao.weex.ui.view.ExtractBitmapCanvas;
@@ -221,6 +223,7 @@ import com.taobao.weex.utils.WXViewUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -240,11 +243,14 @@ public class WXRecycleImageManager {
   }
 
   private static boolean IfRecycleImage = true;
+  private static boolean m_enable_strict_image_recycle = true;
+
   /**
    * Location of imageView on the screen
    */
   int[] mImgPos = new int[2];
   private WXSDKInstance mInstance;
+  private HashMap<View, ImageLoadInfo> mAllImagesMap = new HashMap<View, ImageLoadInfo>();
   private List<ImageInfo> mAllImages = new ArrayList<>();
 
   public WXRecycleImageManager(WXSDKInstance instance) {
@@ -326,6 +332,63 @@ public class WXRecycleImageManager {
     return true;
   }
 
+  public void addImageInMapIfNeed(WXComponent view) {
+    if (!m_enable_strict_image_recycle)
+      return;
+    if (view.getView() != null ) {
+      String url = view.getDomObject().attr.getImageSrc();
+      if (!mAllImagesMap.containsKey(view))
+         mAllImagesMap.put(view.getView(), new ImageLoadInfo(url, false, view));
+      else {
+        if (url != null)
+          mAllImagesMap.get(view).url = url;
+        if (mAllImagesMap.get(view).image.get() != view)
+          mAllImagesMap.get(view).image = new WeakReference<WXComponent>(view);
+      }
+    }
+  }
+
+  public void setImage(String url, ImageView view, WXImageQuality quality, WXImageStrategy strategy, IWXImageLoaderListener listener) {
+    if (!m_enable_strict_image_recycle) {
+      mInstance.getImgLoaderAdapter().setImage(url, view, quality, strategy, listener);
+      return;
+    }
+    boolean imageExistsInMap = mAllImagesMap.get(view) != null;
+    if (!imageExistsInMap) {
+      return;
+    }
+    if (mAllImagesMap.get(view).image.get().getView() == view) {
+      if (mAllImagesMap.get(view).loaded && url == mAllImagesMap.get(view).url)
+        return;
+      if (!mAllImagesMap.get(view).loaded && url == null)
+        return;
+    }
+
+    mAllImagesMap.get(view).loaded = (url != null);
+    if (url != null)
+      mAllImagesMap.get(view).url = url;
+
+    mInstance.getImgLoaderAdapter().setImage(url, view, quality, strategy, listener);
+  }
+
+  public void onDetachedFromWindow(ImageView view) {
+    setImage(null, view, null, null, null);
+  }
+  public void onAttachedToWindow(ImageView view) {
+    if (!m_enable_strict_image_recycle)
+      return;
+    if (mAllImagesMap.get(view) == null || mAllImagesMap.get(view).image.get() == null)
+      return;
+    WXComponent image = mAllImagesMap.get(view).image.get();
+    WXImageStrategy imageStrategy = new WXImageStrategy();
+    imageStrategy.isClipping = true;
+    WXImageSharpen imageSharpen = image.mDomObj.attr.getImageSharpen();
+    imageStrategy.isSharpen = imageSharpen == WXImageSharpen.SHARPEN;
+
+    setImage(mAllImagesMap.get(view).url, view,
+            image.mDomObj.attr.getImageQuality(), imageStrategy, null);
+  }
+
   public void loadImage() {
     if(!IfRecycleImage){
       return;
@@ -376,13 +439,13 @@ public class WXRecycleImageManager {
         waImageStrategy.isSharpen = waImageSharpen == WXImageSharpen.SHARPEN;
         if (!(component instanceof WXImage))
             return;
-        mInstance.getImgLoaderAdapter().setImage(
+        setImage(
           url == null ? null : url.toString(),
           (ImageView) component.getView(),
           element.attr.getImageQuality(),
           waImageStrategy, (WXImage)component);
       } else {
-        mInstance.getImgLoaderAdapter().setImage(null, (ImageView) component.getView(),
+        setImage(null, (ImageView) component.getView(),
                                                  null, null, null);
       }
     } catch (Exception e) {
@@ -424,5 +487,16 @@ public class WXRecycleImageManager {
 
     public WeakReference<WXComponent> image;
     public boolean isRecycle;
+  }
+
+  public static class ImageLoadInfo {
+    ImageLoadInfo(String u, boolean l, WXComponent i) {
+      url= u;
+      loaded = l;
+      image = new WeakReference<WXComponent>(i);
+    }
+    public String url;
+    public boolean loaded;
+    public WeakReference<WXComponent> image;
   }
 }

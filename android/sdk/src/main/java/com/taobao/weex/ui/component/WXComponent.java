@@ -151,6 +151,7 @@ import com.taobao.weex.common.WXDomPropConstant;
 import com.taobao.weex.common.WXRuntimeException;
 import com.taobao.weex.dom.WXDomObject;
 import com.taobao.weex.dom.flex.Spacing;
+import com.taobao.weex.ui.WXRecycleImageManager;
 import com.taobao.weex.ui.component.list.WXListComponent;
 import com.taobao.weex.ui.view.WXBackgroundDrawable;
 import com.taobao.weex.ui.view.WXCircleIndicator;
@@ -250,6 +251,12 @@ public abstract class WXComponent implements IWXObject, IWXActivityStateListener
     updateProperties();
     addEvents();
     updateExtra(mDomObj.getExtra());
+    if (this instanceof WXImage) {
+      WXRecycleImageManager recycleImageManager = mInstance
+              .getRecycleImageManager();
+      if (recycleImageManager != null)
+        recycleImageManager.addImageInMapIfNeed(this);
+    }
   }
 
   protected WXBorder getOrCreateBorder() {
