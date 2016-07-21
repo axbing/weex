@@ -873,4 +873,8 @@ public class WXSDKInstance implements IWXActivityStateListener {
 
     }
   }
+
+  public static void takeJSHeapSnapshot(String filename) {
+      WXSDKManager.getInstance().takeJSHeapSnapshot(filename);
+  }
 }

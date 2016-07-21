@@ -130,4 +130,8 @@ public class WXWebsocketBridge implements IWXBridge {
             mJsManager.reportJSException(instanceId, func, exception);
         }
     }
+
+    @Override
+    public void takeHeapSnapshot(String filename) {
+    }
 }

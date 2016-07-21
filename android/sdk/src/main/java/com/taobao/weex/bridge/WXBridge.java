@@ -255,4 +255,11 @@ class WXBridge implements IWXBridge {
   public void setTimeoutNative(String callbackId, String time) {
     WXBridgeManager.getInstance().setTimeout(callbackId, time);
   }
+
+  /**
+   * Take Heap snapshot
+   *
+   * @param filename the name of the file to be written.
+   */
+  public native void takeHeapSnapshot(String filename);
 }

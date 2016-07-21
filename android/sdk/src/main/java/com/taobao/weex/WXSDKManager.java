@@ -340,4 +340,8 @@ public class WXSDKManager {
   public void setIWXHttpAdapter(IWXHttpAdapter IWXHttpAdapter) {
     mIWXHttpAdapter = IWXHttpAdapter;
   }
+
+  public void takeJSHeapSnapshot(String filename) {
+      mBridgeManager.takeJSHeapSnapshot(filename);
+  }
 }

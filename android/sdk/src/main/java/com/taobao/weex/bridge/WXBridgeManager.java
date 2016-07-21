@@ -789,6 +789,12 @@ public class WXBridgeManager implements Callback {
         WXJSObject[] args = {obj};
         mWXBridge.execJS("", null, "setTimeoutCallback", args);
         break;
+      case WXJSBridgeMsgType.TAKE_HEAP_SNAPSHOT:
+        if (msg.obj != null) {
+            String filename = (String) msg.obj;
+            mWXBridge.takeHeapSnapshot(filename);
+        }
+        break;
       default:
         break;
     }
@@ -1044,5 +1050,17 @@ public class WXBridgeManager implements Callback {
 
   public void submitDOMCommandQueue(String instanceId) {
       WXModuleManager.submitCommandQueues(instanceId);
+  }
+
+  public void takeJSHeapSnapshot(String filename) {
+    if (!WXEnvironment.sSupport) {
+      return;
+    }
+
+    Message msg = mJSHandler.obtainMessage();
+    msg.obj = filename;
+    msg.what = WXJSBridgeMsgType.TAKE_HEAP_SNAPSHOT;
+    msg.setTarget(mJSHandler);
+    msg.sendToTarget();
   }
 }

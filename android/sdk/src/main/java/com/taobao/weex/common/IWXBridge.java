@@ -232,4 +232,6 @@ public interface IWXBridge extends IWXObject {
   void callNative(String instanceId, String tasks, String callback);
 
   void reportJSException(String instanceId, String func, String exception);
+
+  void takeHeapSnapshot(String filename);
 }
